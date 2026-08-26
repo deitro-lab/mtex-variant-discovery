@@ -22,7 +22,9 @@ def main():
       options.update({'report_dir': options['in_dir']})    
 
   prlutil.init_project(dir_list.values())
+
   fastp_cmd = prlprep.process_folder(dir_list['in_dir'], options['PARAM:INPUT'], {**dir_list, 'args': copy.copy(options['OPTIONS:FASTP'])})
+  prlutil.run_parallel(fastp_cmd, 4)
 
   time_span = timedelta(seconds=time.perf_counter()-time_start)
   print('Time used: ', time_span)
