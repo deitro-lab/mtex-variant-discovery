@@ -2,13 +2,8 @@
 # Based on the script for parallel implementation of fastp
 # https://github.com/OpenGene/fastp/blob/cce79745e882a5794bae39a8b648b841a26d4529/parallel.py
 
-import os,sys
-from multiprocessing import Process, Queue
-import copy
-import subprocess
-from concurrent.futures import ThreadPoolExecutor
-
-from click import option
+import os
+import copy 
 
 def match_flag(filename, flag, pos):
   if pos == 'prefix':
