@@ -20,5 +20,4 @@ def parse_config(config_path, config_defaults = None):
 def init_project(folders):
   for folder in folders:
     if not os.path.isdir(folder):
-      print('initialize...')
-      os.mkdir(folder)
+      os.makedirs(folder)
