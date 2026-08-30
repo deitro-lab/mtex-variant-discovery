@@ -24,6 +24,13 @@ def init_project(folders):
     if not os.path.isdir(folder):
       os.makedirs(folder)
 
+def prompt_flag(msg):
+  msg_flag = ''
+  while msg_flag.lower() not in ('y', 'yes', 'n', 'no'):
+    msg_flag = input(msg)
+
+  return (msg_flag == 'y' or msg_flag == 'yes')
+
 def match_flag(filename, flag, pos):
   if pos == 'prefix':
     if flag.endswith('.') or flag.endswith('_') or flag.endswith('-'):
