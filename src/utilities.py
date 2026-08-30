@@ -24,6 +24,23 @@ def init_project(folders):
     if not os.path.isdir(folder):
       os.makedirs(folder)
 
+def match_flag(filename, flag, pos):
+  if pos == 'prefix':
+    if flag.endswith('.') or flag.endswith('_') or flag.endswith('-'):
+        return flag in filename
+    else:
+      return (flag + "." in filename) or (flag + "_" in filename) or (flag + "-" in filename)
+  elif pos == 'suffix':
+    if flag.startswith('.') or flag.startswith('_') or flag.startswith('-'):
+        return flag in filename
+    else:
+      return ("." + flag in filename) or ("_" + flag in filename) or ("-" + flag in filename)
+
+def strip_ext(filename, ext):
+  for e in ext:
+    if filename.endswith(e):
+      return filename[:-len(e)]
+
 def run_command(cmd):
   print("Running command: " + cmd)
   try:

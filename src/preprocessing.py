@@ -3,25 +3,9 @@
 # https://github.com/OpenGene/fastp/blob/cce79745e882a5794bae39a8b648b841a26d4529/parallel.py
 
 import os
-import copy 
+import copy
 
-def match_flag(filename, flag, pos):
-  if pos == 'prefix':
-    if flag.endswith('.') or flag.endswith('_') or flag.endswith('-'):
-        return flag in filename
-    else:
-      return (flag + "." in filename) or (flag + "_" in filename) or (flag + "-" in filename)
-  elif pos == 'suffix':
-    if flag.startswith('.') or flag.startswith('_') or flag.startswith('-'):
-        return flag in filename
-    else:
-      return ("." + flag in filename) or ("_" + flag in filename) or ("-" + flag in filename)
-
-def strip_fqext(filename):
-  fqext = (".fq.gz", ".fastq.gz", ".fq", ".fastq")
-  for ext in fqext:
-    if filename.endswith(ext):
-      return filename[:-len(ext)]
+import src.utilities as prlutil
 
 def process_folder(folder, infiles, options):
   fqext = (".fq", ".fastq", ".fq.gz", ".fastq.gz")
@@ -50,7 +34,7 @@ def process_folder(folder, infiles, options):
     if path in processed:
       continue
 
-    if match_flag(f, r2_flag, flag_type):
+    if prlutil.match_flag(f, r2_flag, flag_type):
       continue
 
     processed.add(path)
@@ -58,13 +42,13 @@ def process_folder(folder, infiles, options):
     if f.startswith("Undetermined"):
       continue
 
-    if match_flag(f, r1_flag, flag_type):
+    if prlutil.match_flag(f, r1_flag, flag_type):
       opt = copy.copy(options)
       opt['read1_file'] = path
       read_dir, base_name = os.path.dirname(path), os.path.basename(path)
       mate_path = os.path.join(read_dir, base_name.replace(r1_flag, r2_flag))        
       if os.path.exists(mate_path):
-        opt['read2_file'], opt['read_name'] = mate_path, strip_fqext(base_name).replace(r1_flag, '')
+        opt['read2_file'], opt['read_name'] = mate_path, prlutil.strip_ext(base_name, fqext).replace(r1_flag, '')
         processed.add(mate_path)
         options_list.append(opt)
 
@@ -76,9 +60,9 @@ def process_folder(folder, infiles, options):
     if opt['out_dir']:
       if not os.path.exists(opt['out_dir']):
         os.makedirs(opt.out_dir)
-      out_prefix1 = os.path.join(opt['out_dir'], os.path.basename(strip_fqext(opt['read1_file'])))
+      out_prefix1 = os.path.join(opt['out_dir'], os.path.basename(prlutil.strip_ext(opt['read1_file'], fqext)))
       cmd += " -o " + out_prefix1 + ".clean.fastq.gz"
-      out_prefix2 = os.path.join(opt['out_dir'], os.path.basename(strip_fqext(opt['read2_file'])))
+      out_prefix2 = os.path.join(opt['out_dir'], os.path.basename(prlutil.strip_ext(opt['read2_file'], fqext)))
       cmd += " -O " + out_prefix2 + ".clean.fastq.gz"
 
     for arg_k, arg_v in opt['args'].items():
