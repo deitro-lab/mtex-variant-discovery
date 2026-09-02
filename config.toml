@@ -1,0 +1,28 @@
+[directories]
+root = '.'
+in_dir = './reads'
+out_dir = './output'
+ref_dir = './refs'
+tmp_dir = './tmp'
+rep_dir = './output/reports'
+
+[input]
+flag_type = 'suffix'
+read1_flag = '_1'
+read2_flag = '_2'
+ref_file = 'Mtex-Abuab_RBK.fa'
+
+[slurm]
+email = 'test.id@gmail.com'
+username = 'test.id'
+partition = ['batch','debug']
+
+[options.fastp]
+thread = 6
+trim_poly_g = true
+detect_adapter_for_pe = true
+dont_eval_duplication = true
+length_required = 80
+
+[options.bwa_mem]
+thread = 6

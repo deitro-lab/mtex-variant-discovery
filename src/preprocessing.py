@@ -66,16 +66,16 @@ def process_folder(folder, infiles, options):
       cmd += " -O " + out_prefix2 + ".clean.fastq.gz"
 
     for arg_k, arg_v in opt['args'].items():
-      if arg_v.upper() == 'TRUE':
+      if arg_v:
         cmd += " --" + arg_k
       elif len(arg_v) > 0:
-        cmd += " --" + arg_k + "=" + arg_v
+        cmd += " --" + arg_k + "=" + str(arg_v)
 
-    if 'report_dir' in opt:
-      if not os.path.exists(opt['report_dir']):
-        os.makedirs(opt['report_dir'])
+    if 'rep_dir' in opt:
+      if not os.path.exists(opt['rep_dir']):
+        os.makedirs(opt['rep_dir'])
     
-    report_file = os.path.join(opt['report_dir'], opt['read_name'])
+    report_file = os.path.join(opt['rep_dir'], opt['read_name'])
     cmd += " --html=" + report_file + ".html --json=" + report_file + ".json"
     
     commands.append(cmd)

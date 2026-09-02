@@ -3,17 +3,19 @@
 import time
 from datetime import timedelta
 import copy
+
 import src.utilities as prlutil
 import src.preprocessing as prlprep
 import src.mapping as prlmap
 
 def main():
   time_start = time.perf_counter()
+  mock = True
 
   # config_dir = input("Enter path for config file: ")
-  config_dir = './var.local.config'
+  config_dir = './config.toml'
   options = prlutil.parse_config(config_dir)
-  dir_list = options['DIRECTORIES']
+  dir_list = options['directories']
 
   if 'in_dir' not in options:
     options.update({'in_dir': '.'})
@@ -26,20 +28,28 @@ def main():
   prlutil.init_project(dir_list.values())
 
   # Step 1: preprocessing
-  has_prep = ''
-  while has_prep.lower() not in ('y', 'yes', 'n', 'no'):
-    has_prep = input("Perform preprocessing step? (Y/N): ")
-  if has_prep == 'y' or has_prep == 'yes':
-    fastp_cmd = prlprep.process_folder(dir_list['in_dir'], options['PARAM:INPUT'], {**dir_list, 'args': copy.copy(options['OPTIONS:FASTP'])})
-    prlutil.run_parallel(fastp_cmd, 6)
+  if prlutil.prompt_flag("Perform preprocessing step? (Y/N): "):
+    fastp_cmd = prlprep.process_folder(dir_list['in_dir'], options['input'], {**dir_list, 'args': copy.copy(options['options']['fastp'])})
+    if not mock:
+      prlutil.run_parallel(fastp_cmd, 6)
+    else:
+      print(fastp_cmd)
 
   # Step 2.1: Reference indexing
-  has_idx = ''
-  while has_idx.lower() not in ('y', 'yes', 'n', 'no'):
-    has_idx = input("Perform reference indexing? (Y/N): ")
-  if has_idx == 'y' or has_idx == 'yes':
+  if prlutil.prompt_flag("Perform reference indexing? (Y/N): "):
     idx_cmd = prlmap.index_ref(dir_list['ref_dir'])
-    prlutil.run_parallel(idx_cmd)
+    if not mock:
+      prlutil.run_parallel(idx_cmd)
+    else:
+      print(idx_cmd)
+
+  # Step 2.2: Read mapping
+  # if prlutil.prompt_flag("Map reads to reference? (Y/N): "):
+  #   map_cmd = prlmap.map_reads(dir_list['in_dir'], options['PARAM:INPUT'], options['OPTIONS:BWA-MEM'])
+  #   if not mock:
+  #     prlutil.run_parallel(idx_cmd)
+  #   else:
+  #     print(map_cmd)
 
   time_span = timedelta(seconds=time.perf_counter()-time_start)
   print('Time used: ', time_span)
