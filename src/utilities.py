@@ -5,27 +5,15 @@ import os
 import subprocess
 import tomllib
 
-# def parse_config(config_path, config_defaults = None):
-#   config = configparser.ConfigParser()
-#   config['DEFAULT'] = dict()
-#   config_set = {}
-#   if config_defaults is not None:
-#     config.update(config_defaults)
-
-#   if os.path.exists(config_path):
-#     config.read(config_path)
-#     for sec in config.sections():
-#       config_set.update({sec: dict(config.items(sec))})
-#   else:
-#     print(f"Config file in {config_path} not found.")
-
 def parse_config(config_path, defaults = None):
   if os.path.exists(config_path):
     with open(config_path, "rb") as cf:
       config = tomllib.load(cf)
   elif isinstance(defaults, dict):
     config = defaults
-  print(config)
+  else:
+    config = dict()
+    print(f"Config file in '{config_path}' not found.")
   return config
 
 def init_project(folders):

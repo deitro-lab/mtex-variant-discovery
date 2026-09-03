@@ -1,15 +1,31 @@
 [directories]
-root = '.'
+# Relative paths will be resolved based on project directory
+# if no 'root' is defined 
+
+# root: root directory for resolving other project directories
+# in_dir: directory for data files (i.e. short reads)
+# out_dir: directory for file processing outputs
+# ref_dir: directory for reference genome assemblies
+# tmp_dir: directory for temporary files
+# rep_dir: directory for supplementary stats & reports
+
+#root = '.'
 in_dir = './reads'
 out_dir = './output'
 ref_dir = './refs'
 tmp_dir = './tmp'
 rep_dir = './output/reports'
 
-[input]
+# flag_type: position of read identifier in filename
+# read1_flag: identifier for 1st read in paired-end data
+# read2_flag: identifier for 2nd read in paired-end data
+# ref_file: primary reference genome file to use
+[input.fastp]
 flag_type = 'suffix'
 read1_flag = '_1'
 read2_flag = '_2'
+
+[input.bwa_mem]
 ref_file = 'Mtex-Abuab_RBK.fa'
 
 [slurm]
@@ -26,3 +42,9 @@ length_required = 80
 
 [options.bwa_mem]
 thread = 6
+
+[options.bcftools_mpileup]
+threads = 6
+ambig-reads = 'drop'
+annotate = 'AD,SD,SP'
+output-type = 'v'
