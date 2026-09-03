@@ -22,20 +22,20 @@ def init_project(folders):
       os.makedirs(folder)
 
 def prompt_flag(msg):
-  msg_flag = ''
-  while msg_flag.lower() not in ('y', 'yes', 'n', 'no'):
+  msg_flag = ""
+  while msg_flag.lower() not in ("y", "yes", "n", "no"):
     msg_flag = input(msg)
 
-  return (msg_flag == 'y' or msg_flag == 'yes')
+  return (msg_flag == "y" or msg_flag == "yes")
 
 def match_flag(filename, flag, pos):
-  if pos == 'prefix':
-    if flag.endswith('.') or flag.endswith('_') or flag.endswith('-'):
+  if pos == "suffix":
+    if flag.endswith(".") or flag.endswith("_") or flag.endswith("-"):
         return flag in filename
     else:
       return (flag + "." in filename) or (flag + "_" in filename) or (flag + "-" in filename)
-  elif pos == 'suffix':
-    if flag.startswith('.') or flag.startswith('_') or flag.startswith('-'):
+  elif pos == "prefix":
+    if flag.startswith(".") or flag.startswith("_") or flag.startswith("-"):
         return flag in filename
     else:
       return ("." + flag in filename) or ("_" + flag in filename) or ("-" + flag in filename)
@@ -53,7 +53,7 @@ def run_command(cmd):
     print(f"Execution failed: {err}")
     return err
 
-  if run_result.stderr != '':
+  if run_result.stderr != "":
     print(run_result.stderr)
 
   return run_result.stdout
@@ -71,4 +71,13 @@ def run_parallel(cmd_queue, procs=None):
     except Exception as err:
       print(f"Error occurred: {err}")
   
+  return process_out
+
+def run_serial(cmd_queue):
+  process_out = []
+  for cmd in cmd_queue:
+    try:
+      process_out.append(run_command(cmd))
+    except Exception as err:
+      print(f"Error occurred: {err}")
   return process_out

@@ -57,9 +57,14 @@ def main():
     dir_list["tmp_dir"] = "./tmp"
   if "rep_dir" not in dir_list:
     print("Warning: No report directory specified in config.")
-    dir_list["rep_dir"] = "./output"    
+    dir_list["rep_dir"] = "./output"
+
+  if "workers" not in options.keys():
+    options["workers"] = 6
 
   prlutil.init_project(dir_list.values())
+
+  step = 1
 
   # Step 1: preprocessing
   if not run_args.no_preprocess:
@@ -71,27 +76,47 @@ def main():
       copy.copy(options["input"]["fastp"]),
       **copy.copy(options["options"]["fastp"])
     )
+
+    print(f"[{step}] Performing preprocessing...")
+    step += 1
     if run_args.is_dryrun:
       for c, i in zip(fastp_cmd, range(1, len(fastp_cmd)+1)):
         print(f"{i}: {c}")
     else:
-      prlutil.run_parallel(fastp_cmd, 6)
+      prlutil.run_parallel(fastp_cmd, options["workers"])
 
   # Step 2.1: Reference indexing
-  # if prlutil.prompt_flag("Perform reference indexing? (Y/N): "):
-  #   idx_cmd = prlmap.index_ref(dir_list["ref_dir"])
-  #   if not mock:
-  #     prlutil.run_parallel(idx_cmd)
-  #   else:
-  #     print(idx_cmd)
+  if not run_args.no_index:
+    idx_cmd = prlmap.index_refs(dir_list["ref_dir"])
+
+    print(f"[{step}] Performing reference indexing...")
+    step += 1
+    if run_args.is_dryrun:
+      for c, i in zip(idx_cmd, range(1, len(idx_cmd)+1)):
+        print(f"{i}: {c}")
+    else:
+      if len(idx_cmd) == 0:
+        print("Reference files already indexed.")
+      else:  
+        prlutil.run_serial(idx_cmd)
 
   # Step 2.2: Read mapping
-  # if prlutil.prompt_flag("Map reads to reference? (Y/N): "):
-  #   map_cmd = prlmap.map_reads(dir_list["in_dir"], options["PARAM:INPUT"], options["OPTIONS:BWA-MEM"])
-  #   if not mock:
-  #     prlutil.run_parallel(idx_cmd)
-  #   else:
-  #     print(map_cmd)
+  if not run_args.no_map:
+    map_cmd = prlmap.map_reads(
+      dir_list["out_dir"],
+      dir_list["ref_dir"],
+      {**copy.copy(options["input"]["fastp"]), **copy.copy(options["input"]["bwa_mem"])},
+      **copy.copy(options["options"]["bwa_mem"])
+    )
+
+    print(f"[{step}] Performing read mapping...")
+    step += 1
+    if run_args.is_dryrun:
+      for c, i in zip(map_cmd, range(1, len(map_cmd)+1)):
+        print(f"{i}: {c}")
+    else:
+      prlutil.run_serial(map_cmd)
+      # prlutil.run_parallel(map_cmd, options["workers"])
 
   time_span = timedelta(seconds=time.perf_counter()-time_start)
   print("Time used: ", time_span)
