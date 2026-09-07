@@ -78,8 +78,7 @@ def prep_reads(in_dir, out_dir, rep_dir = None, flags = {"flag_type": "suffix", 
     commands.append(cmd)
 
   if len(options_list) == 0:
-    print("No FASTQ file found, do you call the program correctly?")
-    print("See -h for help")
+    print("No FASTQ file found. Check your specified input directory.")
     return
 
   return commands

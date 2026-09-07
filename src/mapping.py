@@ -84,7 +84,6 @@ def map_reads(in_dir, ref_dir, in_opts, **options):
       else:
         continue
 
-# bwa-mem2 mem -t "${GALAXY_SLOTS:-1}" ${REFERENCE} ${read1} ${read2}
   commands = []
   for opt in options_list:
     cmd = "bwa mem"
@@ -101,8 +100,7 @@ def map_reads(in_dir, ref_dir, in_opts, **options):
     commands.append(cmd)
   
   if len(options_list) == 0:
-    print("No FASTQ file found, do you call the program correctly?")
-    print("See -h for help")
+    print("No FASTQ file found. Check your specified input directory.")
     return
 
   return commands

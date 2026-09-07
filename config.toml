@@ -1,8 +1,8 @@
-workers = 6
+workers = 4
 
 [directories]
 # Relative paths will be resolved based on project directory
-# if no 'root' is defined 
+  # if no 'root' is defined 
 
 # root: root directory for resolving other project directories
 # in_dir: directory for data files (i.e. short reads)
@@ -23,6 +23,10 @@ email = 'test.id@gmail.com'
 username = 'test.id'
 partition = ['batch','debug']
 
+# input.<tool> - additional info related to input files
+# options.<tool> - follows syntax of options specified by
+  # the tool; set flags to true
+
 # flag_type: position of read identifier in filename
 # read1_flag: identifier for 1st read in paired-end data
 # read2_flag: identifier for 2nd read in paired-end data
@@ -33,11 +37,12 @@ read1_flag = '_1'
 read2_flag = '_2'
 
 [options.fastp]
-thread = 8
+thread = 4
 trim_poly_g = true
 detect_adapter_for_pe = true
 dont_eval_duplication = true
 length_required = 80
+qualified_quality_phred = 20
 
 [input.bwa_mem]
 ref_file = 'Mtex-Abuab_RBK.fa'
