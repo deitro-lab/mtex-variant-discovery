@@ -1,8 +1,8 @@
 # This file may be used to create an environment using:
 # $ conda create --name <env> --file <this file>
 # platform: linux-64
-# created-by: conda 26.5.0
-_openmp_mutex=4.5=20_gnu
+# created-by: conda 26.5.2
+_openmp_mutex=4.5=8_kmp_llvm
 _python_abi3_support=1.0=hd8ed1ab_2
 aiohappyeyeballs=2.6.1=pyhd8ed1ab_0
 aiohttp=3.13.5=py312h5d8c7f2_0
@@ -10,10 +10,14 @@ aiosignal=1.4.0=pyhd8ed1ab_0
 annotated-types=0.7.0=pyhd8ed1ab_1
 attrs=26.1.0=pyhcf101f3_0
 bioblend=1.9.0=pyhdfd78af_0
+biopython=1.88=py312h4c3975b_0
 brotli-python=1.2.0=py312hdb49522_1
+bwa-mem2=2.3=he70b90d_0
+bwa-mem3=0.10.0=h8d53bd0_0
 bzip2=1.0.8=hda65f42_9
-ca-certificates=2026.4.22=hbd8a1cb_0
-certifi=2026.4.22=pyhd8ed1ab_0
+c-ares=1.34.8=hebe6cf0_2
+ca-certificates=2026.7.22=hbd8a1cb_0
+certifi=2026.7.22=pyhd8ed1ab_0
 cffi=2.0.0=py312h460c074_1
 charset-normalizer=3.4.7=pyhd8ed1ab_0
 click=8.3.3=pyhc90fa1f_0
@@ -22,7 +26,7 @@ coloredlogs=15.0.1=pyhd8ed1ab_4
 colormath=3.0.0=pyhd8ed1ab_4
 cpython=3.12.13=py312hd8ed1ab_0
 expat=2.7.5=hecca717_0
-fastp=0.22.0=h2e03b76_0
+fastp=1.3.6=h43da1c4_0
 font-ttf-dejavu-sans-mono=2.37=hab24e00_0
 font-ttf-inconsolata=3.000=h77eed37_0
 font-ttf-source-code-pro=2.038=h77eed37_0
@@ -34,22 +38,29 @@ frozenlist=1.7.0=py312h447239a_0
 galaxy-upload=1.0.1=pyhdfd78af_0
 h2=4.3.0=pyhcf101f3_0
 hpack=4.1.0=pyhd8ed1ab_0
+htslib=1.24=ha79157c_0
 humanfriendly=10.0=pyh707e725_8
 humanize=4.15.0=pyhd8ed1ab_0
 hyperframe=6.1.0=pyhd8ed1ab_0
 icu=78.3=h33c6efd_0
 idna=3.13=pyhcf101f3_0
 importlib-metadata=8.8.0=pyhcf101f3_0
+isa-l=2.32.1=hb03c661_0
 jinja2=3.1.6=pyhcf101f3_1
 jsonschema=4.26.0=pyhcf101f3_0
 jsonschema-specifications=2025.9.1=pyhcf101f3_0
 kaleido-core=0.2.1=h3644ca4_0
+keyutils=1.6.3=h7cc23a3_1
+krb5=1.22.2=hbc21106_2
 lcms2=2.16=hb7c19ff_0
 ld_impl_linux-64=2.45.1=bootstrap_ha15bf96_2
 lerc=4.1.0=hdb68285_0
 libblas=3.11.0=6_h4a7cf45_openblas
 libcblas=3.11.0=6_h0358290_openblas
-libdeflate=1.20=hd590300_0
+libcurl=8.21.0=ha042cf0_5
+libdeflate=1.25=hd45a770_1
+libedit=3.1.20250104=pl5321h7949ede_0
+libev=4.33=h280c20c_3
 libexpat=2.7.5=hecca717_0
 libffi=3.5.2=h3435931_0
 libgcc=15.2.0=he0feb66_18
@@ -57,23 +68,29 @@ libgcc-ng=15.2.0=h69a702a_18
 libgfortran=15.2.0=h69a702a_18
 libgfortran5=15.2.0=h68bc16d_18
 libgomp=15.2.0=he0feb66_18
+libhwy=1.3.0=h4c17acf_1
 libjpeg-turbo=3.1.4.1=hb03c661_0
 liblapack=3.11.0=6_h47877c9_openblas
 liblzma=5.8.3=hb03c661_0
 liblzma-devel=5.8.3=hb03c661_0
 libmpdec=4.0.0=hb03c661_1
+libnghttp2=1.68.1=h74cf4be_1
 libnsl=2.0.1=hb9d3cd8_1
 libopenblas=0.3.32=pthreads_h94d23a6_0
 libpng=1.6.43=h2797004_0
+libpsl=0.23.1=hd9e3e90_1
+libsais=2.10.4=h280c20c_0
 libsqlite=3.46.0=hde9e2c9_0
+libssh2=1.11.1=h6154650_1
 libstdcxx=15.2.0=h934c35e_18
 libstdcxx-ng=15.2.0=hdf11a46_18
-libtiff=4.6.0=h1dd3fc0_3
+libtiff=4.7.2=h9d88235_0
 libuuid=2.42=h5347b49_0
 libwebp-base=1.6.0=hd42ef1d_0
 libxcb=1.15=h0b41bf4_0
 libxcrypt=4.4.36=hd590300_1
-libzlib=1.2.13=h4ab18f5_6
+libzlib=1.3.2=h25fd6f3_3
+llvm-openmp=23.1.0=h7148c6a_0
 markdown=3.10.2=pyhcf101f3_0
 markdown-it-py=4.0.0=pyhd8ed1ab_0
 markupsafe=3.0.3=py312h8a5da7c_1
@@ -88,9 +105,11 @@ networkx=3.6.1=pyhcf101f3_0
 nspr=4.38=h29cc59b_0
 nss=3.100=hca3bf56_0
 numpy=2.4.3=py312h33ff503_0
+openjdk=11.0.1=h516909a_1016
 openjpeg=2.5.2=h488ebb8_0
-openssl=3.6.2=h35e630c_0
+openssl=3.6.4=h781a0a9_0
 packaging=26.2=pyhc364b38_0
+picard=2.20.4=0
 pillow=10.3.0=py312hdcec9eb_0
 pip=26.0.1=pyh8b19718_0
 plotly=6.6.0=pyhd8ed1ab_0
@@ -143,6 +162,6 @@ xz-tools=5.8.3=hb03c661_0
 yaml=0.2.5=h280c20c_3
 yarl=1.23.0=py312h8a5da7c_0
 zipp=3.23.1=pyhcf101f3_0
-zlib=1.2.13=h4ab18f5_6
+zlib=1.3.2=h25fd6f3_3
 zstandard=0.23.0=py312h4c3975b_3
-zstd=1.5.6=ha6fb4c9_0
+zstd=1.5.7=hb78ec9c_7

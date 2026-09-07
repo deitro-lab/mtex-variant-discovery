@@ -14,5 +14,11 @@ venv.bak/
 # Data-linked directories
 output/
 reads/
-ref/
+refs/
 tmp/
+
+# Local
+.archive/
+*.log
+*.local.*
+*.txt
