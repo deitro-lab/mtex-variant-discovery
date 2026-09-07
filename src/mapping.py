@@ -86,14 +86,14 @@ def map_reads(in_dir, ref_dir, in_opts, **options):
 
   commands = []
   for opt in options_list:
-    cmd = "bwa mem"
+    cmd = "bwa-mem2 mem"
 
     for arg_k, arg_v in opt["args"].items():
       if type(arg_v) == bool:
         if arg_v:
-          cmd += " --" + arg_k
+          cmd += " -" + arg_k
       else:
-        cmd += " --" + arg_k + " " + str(arg_v)
+        cmd += " -" + arg_k + " " + str(arg_v)
 
     cmd += " " + ref + " " + opt["read1_file"] + " " + opt["read2_file"]
     
