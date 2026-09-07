@@ -3,6 +3,7 @@
 import argparse
 import copy
 from datetime import timedelta
+import logging
 import os
 import sys
 import time
@@ -17,7 +18,7 @@ VARDIS_VERSION = "0.1"
 def parse_command():
   parser = argparse.ArgumentParser(
     prog = TOOL_NAME,
-    usage = ""
+    usage = "A script for batched processing of short-read FASTQ data from preprocessing to variant calling"
   )
   parser.add_argument("-c", "--config", default = "./config.toml", help = "Path to config file")
   parser.add_argument("-r", "--is-dryrun", action = "store_true", help = "Only perform dry run of steps (commands generated but not executed)")
@@ -26,14 +27,26 @@ def parse_command():
   parser.add_argument("-m", "--no-map", action = "store_true", help = "Disable read mapping step")
   parser.add_argument("-d", "--no-dedup", action = "store_true", help = "Disable sorting & deduplication of alignment files")
   parser.add_argument("-g", "--no-genotyping", action = "store_true", help = "Disable estimation of genotype likelihoods")
+  parser.add_argument("--bwa", default = "bwa-mem2", help = "Specify alignment tool (bwa-mem2/minibwa)")
   args = parser.parse_args()
 
   return args
   
 def main():
+  log_name = time.strftime("%y%m%d%H%M%S") + ".log"
+  logging.basicConfig(
+    filename = log_name,
+    encoding = "utf-8",
+    filemode = "w",
+    level = logging.INFO,
+    format = "[%(asctime)s] %(levelname)s: %(message)s",
+    datefmt = "%Y-%m-%d %H:%M:%S"
+  )
   time_start = time.perf_counter()
+  logging.info("Run started at %s", time_start)
 
   run_args = parse_command()
+  logging.info("Run parameters set as: %s", str(run_args.__dict__))
   
   config_dir = run_args.config
   if os.path.exists(config_dir):
@@ -68,7 +81,6 @@ def main():
 
   # Step 1: preprocessing
   if not run_args.no_preprocess:
-    print(copy.copy(options["input"]["fastp"]))
     fastp_cmd = prlprep.prep_reads(
       dir_list["in_dir"],
       dir_list["out_dir"],
@@ -116,10 +128,10 @@ def main():
         print(f"{i}: {c}")
     else:
       prlutil.run_serial(map_cmd)
-      # prlutil.run_parallel(map_cmd, options["workers"])
 
   time_span = timedelta(seconds=time.perf_counter()-time_start)
   print("Time used: ", time_span)
+  logging.info("Run duration at %s", time_span)
 
 if __name__ == "__main__":
   main()

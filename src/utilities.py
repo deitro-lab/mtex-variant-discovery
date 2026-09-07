@@ -1,4 +1,3 @@
-import configparser
 from concurrent.futures import ProcessPoolExecutor
 import logging
 import os
@@ -6,14 +5,17 @@ import subprocess
 import tomllib
 
 def parse_config(config_path, defaults = None):
+  logger = logging.getLogger(__name__)
   if os.path.exists(config_path):
     with open(config_path, "rb") as cf:
       config = tomllib.load(cf)
   elif isinstance(defaults, dict):
     config = defaults
+    logger.info("Default config provided: %s", str(defaults))
   else:
     config = dict()
     print(f"Config file in '{config_path}' not found.")
+    logger.error("Config file in '%s' not found. No fallback defaults provided.", config_path)
   return config
 
 def init_project(folders):
