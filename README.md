@@ -70,7 +70,7 @@ python var_discovery [-c <configpath> -r] [options...]
 -g, --no-genotyping    Disable estimation of genotype likelihoods
 
 # Tooling
---bwa                  Specify alignment tool. Default is "bwa-mem2". (bwa-mem2/minibwa)
+--aligner                  Specify alignment tool. Default is "bwa-mem2". (bwa-mem2/minibwa)
 
 # Help
 -h, --help             Print program help
@@ -88,7 +88,6 @@ Refer to the corresponding tool documentation for configuring `options.<tool_nam
 - [bcftools](https://samtools.github.io/bcftools/bcftools.html)
 
 # Citations
-
-Chen, S. (2025). fastp 1.0: An ultra-fast all-round tool for FASTQ data quality control and preprocessing. *iMeta, 4*(5), e70078. https://doi.org/10.1002/imt2.70078
-Vasimuddin, Md., Misra, S., Li, H., & Aluru, S. (2019). Efficient Architecture-Aware Acceleration of BWA-MEM for Multicore Systems. *2019 IEEE International Parallel and Distributed Processing Symposium (IPDPS)*, 314–324. https://doi.org/10.1109/IPDPS.2019.00041
-Li, H. (2013). Aligning sequence reads, clone sequences and assembly contigs with BWA-MEM (Version 2). *arXiv*. https://doi.org/10.48550/ARXIV.1303.3997
+- Chen, S. (2025). fastp 1.0: An ultra-fast all-round tool for FASTQ data quality control and preprocessing. *iMeta, 4*(5), e70078. https://doi.org/10.1002/imt2.70078
+- Vasimuddin, Md., Misra, S., Li, H., & Aluru, S. (2019). Efficient Architecture-Aware Acceleration of BWA-MEM for Multicore Systems. *2019 IEEE International Parallel and Distributed Processing Symposium (IPDPS)*, 314–324. https://doi.org/10.1109/IPDPS.2019.00041
+- Li, H. (2013). Aligning sequence reads, clone sequences and assembly contigs with BWA-MEM (Version 2). *arXiv*. https://doi.org/10.48550/ARXIV.1303.3997

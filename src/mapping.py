@@ -5,34 +5,49 @@ import copy
 
 import src.utilities as prlutil
 
-def index_refs(*refs):
+def index_refs(aligner="bwa-mem2", ref_dir=".", **options):
   faext = (".fasta", ".fa", ".fna", ".fas")
   idxext = (".0123", ".amb", ".ann", ".bwt.2bit.64", ".pac")
   commands = []
 
   processed = set() 
 
-  for ref in refs:
-    if os.path.isdir(ref):
+  files = os.listdir(ref_dir)
+  for file in files:
+    path = os.path.join(ref_dir, file)
+    if os.path.isdir(path):
       continue
         
-    if os.path.exists(ref):
-      if not ref.endswith(faext):
+    if os.path.exists(path):
+      if not path.endswith(faext):
         continue
 
       is_indexed = True
       for ext in idxext:
-        if not os.path.exists(ref + ext):
+        if not os.path.exists(path + ext):
           is_indexed = False
           break
 
-      processed.add(ref)
+      processed.add(path)
       if not is_indexed:
-        commands.append(f"bwa-mem2 index {ref}")
+        if aligner == "bwa-mem2":
+          cmd = f"bwa-mem2 index {path}"
+        elif aligner == "minibwa":
+          cmd = "minibwa index"
+          for arg_k, arg_v in options.items():
+            if type(arg_v) == bool:
+              if arg_v:
+                cmd += " -" + arg_k
+            else:
+              cmd += " -" + arg_k + " " + str(arg_v)
+
+          cmd += " " + path
+
+        commands.append(cmd)
 
   return commands
 
-def map_reads(in_dir, ref_dir, in_opts, **options):
+def map_reads(aligner, in_dir, ref_dir, in_opts, **options):
   faext = (".fasta", ".fa", ".fna", ".fas")
   flag_type = in_opts["flag_type"]
   r1_flag = in_opts["read1_flag"]
@@ -51,7 +66,6 @@ def map_reads(in_dir, ref_dir, in_opts, **options):
     if not ref.endswith(faext) or not os.path.exists(ref):
       print("Specified reference file is invalid.")
       return
-
   
   options_list = []
   processed = set()
@@ -86,7 +100,10 @@ def map_reads(in_dir, ref_dir, in_opts, **options):
 
   commands = []
   for opt in options_list:
-    cmd = "bwa-mem2 mem"
+    if aligner == "bwa-mem2":
+      cmd = "bwa-mem2 mem"
+    elif aligner == "minibwa":
+      cmd = "minibwa map"
 
     for arg_k, arg_v in opt["args"].items():
       if type(arg_v) == bool:

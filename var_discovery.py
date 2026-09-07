@@ -27,7 +27,7 @@ def parse_command():
   parser.add_argument("-m", "--no-map", action = "store_true", help = "Disable read mapping step")
   parser.add_argument("-d", "--no-dedup", action = "store_true", help = "Disable sorting & deduplication of alignment files")
   parser.add_argument("-g", "--no-genotyping", action = "store_true", help = "Disable estimation of genotype likelihoods")
-  parser.add_argument("--bwa", default = "bwa-mem2", help = "Specify alignment tool (bwa-mem2/minibwa)")
+  parser.add_argument("--aligner", default = "bwa-mem2", help = "Specify alignment tool (bwa-mem2/minibwa)")
   args = parser.parse_args()
 
   return args
@@ -99,7 +99,11 @@ def main():
 
   # Step 2.1: Reference indexing
   if not run_args.no_index:
-    idx_cmd = prlmap.index_refs(dir_list["ref_dir"])
+    idx_cmd = prlmap.index_refs(
+      run_args.aligner,
+      dir_list["ref_dir"],
+      **copy.copy(options["options"]["bwa_mem"])
+    )
 
     print(f"[{step}] Performing reference indexing...")
     step += 1
@@ -115,6 +119,7 @@ def main():
   # Step 2.2: Read mapping
   if not run_args.no_map:
     map_cmd = prlmap.map_reads(
+      run_args.aligner,
       dir_list["out_dir"],
       dir_list["ref_dir"],
       {**copy.copy(options["input"]["fastp"]), **copy.copy(options["input"]["bwa_mem"])},
