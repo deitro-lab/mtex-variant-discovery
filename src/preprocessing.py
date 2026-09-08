@@ -2,18 +2,21 @@
 # Based on the script for parallel implementation of fastp
 # https://github.com/OpenGene/fastp/blob/cce79745e882a5794bae39a8b648b841a26d4529/parallel.py
 
+import logging
 import os
 
 import src.utilities as prlutil
 
 def prep_reads(in_dir, out_dir, rep_dir = None, flags = {"flag_type": "suffix", "read1_flag": "_1", "read2_flag": "_2"}, **options):
+  logger = logging.getLogger(__name__)
   fqext = (".fq", ".fastq", ".fq.gz", ".fastq.gz")
   flag_type = flags["flag_type"]
   r1_flag = flags["read1_flag"]
   r2_flag = flags["read2_flag"]
   
   if not os.path.isdir(in_dir):
-    return
+    logger.error("Input directory not found.")
+    return []
       
   options_list = []
   processed = set()
@@ -76,9 +79,5 @@ def prep_reads(in_dir, out_dir, rep_dir = None, flags = {"flag_type": "suffix", 
       cmd += " --html=" + report_file + ".html --json=" + report_file + ".json"
     
     commands.append(cmd)
-
-  if len(options_list) == 0:
-    print("No FASTQ file found. Check your specified input directory.")
-    return
 
   return commands

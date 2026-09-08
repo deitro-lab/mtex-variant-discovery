@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
+import logging
 import os
-import copy
 
 import src.utilities as prlutil
 
@@ -48,6 +48,7 @@ def index_refs(aligner="bwa-mem2", ref_dir=".", **options):
   return commands
 
 def map_reads(aligner, in_dir, ref_dir, in_opts, **options):
+  logger = logging.getLogger(__name__)
   faext = (".fasta", ".fa", ".fna", ".fas")
   flag_type = in_opts["flag_type"]
   r1_flag = in_opts["read1_flag"]
@@ -55,17 +56,17 @@ def map_reads(aligner, in_dir, ref_dir, in_opts, **options):
   prep_ext = in_opts["prep_ext"]
 
   if not os.path.isdir(in_dir):
-    print("Input directory not found.")
-    return
+    logger.error("Input directory not found.")
+    return []
   
   if "ref_file" not in in_opts:
-    print("No valid reference file found.")
-    return
+    logger.error("No reference file specified.")
+    return []
   else:
     ref = os.path.join(ref_dir, in_opts["ref_file"])
     if not ref.endswith(faext) or not os.path.exists(ref):
-      print("Specified reference file is invalid.")
-      return
+      logger.error("Specified reference file is invalid.")
+      return []
   
   options_list = []
   processed = set()
@@ -115,9 +116,5 @@ def map_reads(aligner, in_dir, ref_dir, in_opts, **options):
     cmd += " " + ref + " " + opt["read1_file"] + " " + opt["read2_file"]
     
     commands.append(cmd)
-  
-  if len(options_list) == 0:
-    print("No FASTQ file found. Check your specified input directory.")
-    return
 
   return commands
