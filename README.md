@@ -17,17 +17,19 @@ This workflow was developed for batched processing of Illumina short reads.
 .
 ├── LICENSE
 ├── README.md
-├── output
-│   └── reports
-├── reads
-├── ref
+├── config.toml
+├── normalize_refs.sh
+├── output/
+│   └── reports/
+├── reads/
+├── refs/
 ├── requirements.txt
-├── src
+├── src/
 │   ├── fastp.LICENSE
+│   ├── mapping.py
 │   ├── preprocessing.py
 │   └── utilities.py
-├── tmp
-├── var.config
+├── tmp/
 └── var_discovery.py
 ```
 
@@ -50,13 +52,13 @@ conda activate <ENV_NAME>
 ```shell
 git clone https://github.com/deitro-lab/mtex-variant-discovery.git
 cd mtex-variant-discovery
-python var_discovery.py
+AbacaVD
 ```
 By default, this command will execute the main script and perform all steps in the workflow using the configured input reads and reference sequence.
 
 ## Options
 ```shell
-python var_discovery [-c <configpath> -r] [options...]
+AbacaVD [-c <configpath> -r] [options...]
 
 # Configuration
 -c, --config           Path to config file. Default is "./config.toml" (str)
@@ -70,7 +72,7 @@ python var_discovery [-c <configpath> -r] [options...]
 -g, --no-genotyping    Disable estimation of genotype likelihoods
 
 # Tooling
---aligner                  Specify alignment tool. Default is "bwa-mem2". (bwa-mem2/minibwa)
+--aligner              Specify alignment tool. Default is "bwa-mem2". (bwa-mem2/minibwa)
 
 # Help
 -h, --help             Print program help
