@@ -19,6 +19,7 @@ def parse_options():
   logger = logging.getLogger(__name__)
   parser = argparse.ArgumentParser(
     prog=TOOL_NAME,
+    usage="python var_discovery.py [-h] [-c CONFIG] [options...]",
     description="A script for batched processing of short-read FASTQ data from preprocessing to variant calling"
   )
   parser.add_argument("-c", "--config", default="./config.toml", help="Path to config file")
@@ -111,7 +112,7 @@ def main():
     step += 1
     if run_args.is_dryrun:
       for c, i in zip(fastp_cmd, range(1, len(fastp_cmd)+1)):
-        logger.info("#%s: %s", i, c)
+        logger.info("#%s ~ %s", i, c)
     else:
       prlutil.run_parallel(fastp_cmd, options["workers"])
   else:
@@ -129,7 +130,7 @@ def main():
     step += 1
     if run_args.is_dryrun:
       for c, i in zip(idx_cmd, range(1, len(idx_cmd)+1)):
-        logger.info("#%s: %s", i, c)
+        logger.info("#%s ~ %s", i, c)
     else:
       if len(idx_cmd) == 0:
         logger.info("No reference file for indexing.")
@@ -142,6 +143,7 @@ def main():
       aligner=run_args.aligner,
       in_dir=dir_list["out_dir"],
       ref_dir=dir_list["ref_dir"],
+      out_dir=dir_list["out_dir"],
       in_opts={**copy.copy(options["input"]["fastp"]), **copy.copy(options["input"]["bwa_mem"])},
       **copy.copy(options["options"]["bwa_mem"])
     )
@@ -150,13 +152,13 @@ def main():
     step += 1
     if run_args.is_dryrun:
       for c, i in zip(map_cmd, range(1, len(map_cmd)+1)):
-        logger.info("#%s: %s", i, c)
+        logger.info("#%s ~ %s", i, c)
     else:
       prlutil.run_serial(map_cmd)
 
   time_end = time.perf_counter()
   time_span = timedelta(seconds=time.perf_counter()-time_start)
-  logging.info("Run ended at %s. Run duration (sec): %s", time_end, time_span)
+  logging.info("Run ended at %s. Run duration: %s", time_end, time_span)
 
 if __name__ == "__main__":
   main()

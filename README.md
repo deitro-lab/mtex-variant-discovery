@@ -52,13 +52,13 @@ conda activate <ENV_NAME>
 ```shell
 git clone https://github.com/deitro-lab/mtex-variant-discovery.git
 cd mtex-variant-discovery
-AbacaVD
+python var_discovery.py
 ```
 By default, this command will execute the main script and perform all steps in the workflow using the configured input reads and reference sequence.
 
 ## Options
 ```shell
-AbacaVD [-c <configpath> -r] [options...]
+python var_discovery.py [-h] [-c CONFIG] [options...]
 
 # Configuration
 -c, --config           Path to config file. Default is "./config.toml" (str)

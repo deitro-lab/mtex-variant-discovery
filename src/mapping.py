@@ -47,7 +47,7 @@ def index_refs(aligner="bwa-mem2", ref_dir=".", **options):
 
   return commands
 
-def map_reads(aligner, in_dir, ref_dir, in_opts, **options):
+def map_reads(aligner, in_dir, ref_dir, out_dir, in_opts, **options):
   logger = logging.getLogger(__name__)
   faext = (".fasta", ".fa", ".fna", ".fas")
   flag_type = in_opts["flag_type"]
@@ -57,6 +57,12 @@ def map_reads(aligner, in_dir, ref_dir, in_opts, **options):
 
   if not os.path.isdir(in_dir):
     logger.error("Input directory not found.")
+    return []
+  if not os.path.isdir(ref_dir):
+    logger.error("Reference directory not found.")
+    return []
+  if not os.path.isdir(out_dir):
+    logger.error("Output directory not found.")
     return []
   
   if "ref_file" not in in_opts:
@@ -114,6 +120,7 @@ def map_reads(aligner, in_dir, ref_dir, in_opts, **options):
         cmd += " -" + arg_k + " " + str(arg_v)
 
     cmd += " " + ref + " " + opt["read1_file"] + " " + opt["read2_file"]
+    cmd += " > " + os.path.join(out_dir, opt["read_name"] + ".sam")
     
     commands.append(cmd)
 
