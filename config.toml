@@ -55,6 +55,12 @@ t = 8
 [options.bwa_mem]
 t = 8
 
+[input.samtools]
+
+[options.sam_collate]
+threads = 8
+output-fmt = 'BAM'
+
 [options.bcftools_mpileup]
 threads = 8
 ambig-reads = 'drop'

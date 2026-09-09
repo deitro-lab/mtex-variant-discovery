@@ -50,7 +50,8 @@ def map_reads(paired_coll, in_dir, ref=None, out_dir=None, aligner="bwa-mem2", o
   logger = logging.getLogger(__name__)
   faext = (".fasta", ".fa", ".fna", ".fas")
 
-  if in_dir == None:
+  if in_dir == None or out_dir == None or ref == None:
+    logger.error("One or more directory arg missing.")
     raise ValueError
   if not os.path.isdir(in_dir):
     logger.error("Specified input directory not found.")
