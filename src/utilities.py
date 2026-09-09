@@ -1,3 +1,4 @@
+from collections import Counter
 from concurrent.futures import ProcessPoolExecutor
 import logging
 import os
@@ -32,12 +33,77 @@ def init_project(folders):
       os.makedirs(folder)
       logger.warning("Specified directory not found. Created directory '%s'", folder)
 
-# def prompt_flag(msg):
-#   msg_flag = ""
-#   while msg_flag.lower() not in ("y", "yes", "n", "no"):
-#     msg_flag = input(msg)
+def strip_ext(path, ext):
+  if isinstance(ext, str):
+    ext = [ext]
 
-#   return (msg_flag == "y" or msg_flag == "yes")
+  for e in ext:
+    if e[0] != '.':
+      e = "." + e
+
+    if path.endswith(e):
+      return path[:-len(e)]
+    else:
+      return path
+    
+def filter_files(dir, ext):
+  files = os.listdir(dir)
+
+  if not os.path.exists(dir):
+    raise ValueError
+  if ext[0] != '.':
+    raise ValueError
+
+  # filter files
+  filtered = []
+  for f in files:
+    if os.path.isdir(f):
+      continue
+    if f.endswith(ext):
+      filtered.append(f)
+
+  return filtered
+
+def strip_flag(fname, ext, affix, flags):
+  base_name = strip_ext(fname, ext)
+
+  if affix != "prefix" and affix != "suffix":
+      raise ValueError
+  if len(flags) != 2:
+    raise ValueError
+
+  if affix == "prefix":
+    for flg in flags:
+      if base_name.startswith(flg):
+        return base_name[len(flg):]
+  elif affix == "suffix":
+    for flg in flags:
+      if base_name.endswith(flg):
+        return base_name[:-len(flg)]
+
+  return base_name
+
+def make_paired_coll(dir, ext, affix="suffix", flags=("_1","_2")):
+  if not os.path.exists(dir):
+    raise ValueError
+  if ext[0] != '.':
+    raise ValueError
+  if affix != "prefix" and affix != "suffix":
+    raise ValueError
+  if len(flags) != 2:
+    raise ValueError
+
+  paired_coll = {
+    "affix": affix,
+    "f1": flags[0],
+    "f2": flags[1],
+    "items": []
+  }
+
+  files = [strip_flag(f, ext, affix, flags) for f in filter_files(dir, ext)]
+  paired_coll["items"] = [f for f, i in Counter(files).items() if i > 1]
+
+  return paired_coll
 
 def match_flag(filename, flag, pos):
   if pos == "suffix":
@@ -79,6 +145,33 @@ def run_command(cmd):
     logger.error(run_result.stderr)
 
   logger.debug("Command execution completed.")
+  return run_result.stdout
+
+def run_pline(cmd_set):
+  logger = logging.getLogger(__name__)
+  # logger.info("Running command: %s", cmd)
+  try:
+    pipe_in = subprocess.run(cmd_set.pop(0), shell=True, capture_output=True, text=True, check=True)
+    for c in cmd_set:
+      run_result = subprocess.run(c, shell=True, input=pipe_in.stdout, capture_output=True, text=True, check=True)
+      pipe_in = run_result
+  except subprocess.CalledProcessError as err:
+    if err.returncode == 127:
+      logger.error(f"Command execution failed: Command not found. (127)")
+    elif err.returncode == 126:
+      logger.error(f"Command execution failed: Command can't be executed. (126)")
+    elif err.returncode == 130:
+      logger.error(f"Command execution failed: Command run interrupted. (130)")
+    else:
+      logger.error(f"Command execution failed: Shell raised exit code {err.returncode}")
+    return None
+  except Exception as err:
+    logger.error("An unexpected error occurred: %s", err)
+    return None
+
+  if run_result.stderr != "":
+    logger.error(run_result.stderr)
+  
   return run_result.stdout
 
 def run_parallel(cmd_queue, procs=None):
