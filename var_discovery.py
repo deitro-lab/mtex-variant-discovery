@@ -131,7 +131,7 @@ def main():
     idx_cmd = prlmap.index_refs(
       aligner=run_args.aligner,
       ref_dir=dir_list["ref_dir"],
-      **copy.copy(options["options"]["bwa_mem"])
+      options=copy.copy(options["options"]["bwa_index"])
     )
 
     logger.info("[%s] Performing reference indexing...", step)

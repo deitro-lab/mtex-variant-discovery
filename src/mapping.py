@@ -5,45 +5,42 @@ import os
 
 import src.utilities as prlutil
 
-def index_refs(aligner="bwa-mem2", ref_dir=".", **options):
+def is_indexed(aligner, path):
+  if aligner == "bwa-mem2":
+    idxext = (".0123", ".amb", ".ann", ".bwt.2bit.64", ".pac")
+  elif aligner == "minibwa":
+    idxext = (".l2b", ".mbw")
+  else:
+    idxext = ()
+
+  for ext in idxext:
+    if not os.path.exists(path + ext):
+      return False
+
+  return True
+
+def index_refs(aligner="bwa-mem2", ref_dir=".", options=dict()):
   faext = (".fasta", ".fa", ".fna", ".fas")
-  idxext = (".0123", ".amb", ".ann", ".bwt.2bit.64", ".pac")
   commands = []
 
   processed = set() 
 
-  files = os.listdir(ref_dir)
-  for file in files:
+  for file in prlutil.filter_files(ref_dir, faext):
     path = os.path.join(ref_dir, file)
-    if os.path.isdir(path):
+
+    if is_indexed(aligner, path):
       continue
-        
-    if os.path.exists(path):
-      if not path.endswith(faext):
-        continue
 
-      is_indexed = True
-      for ext in idxext:
-        if not os.path.exists(path + ext):
-          is_indexed = False
-          break
+    processed.add(path)
+    if aligner == "bwa-mem2":
+      cmd = f"bwa-mem2 index {path}"
+    elif aligner == "minibwa":
+      cmd = "minibwa index"
+      for opt in prlutil.to_optstring(options):
+        cmd += " " + opt
+      cmd += " " + path
 
-      processed.add(path)
-      if not is_indexed:
-        if aligner == "bwa-mem2":
-          cmd = f"bwa-mem2 index {path}"
-        elif aligner == "minibwa":
-          cmd = "minibwa index"
-          for arg_k, arg_v in options.items():
-            if type(arg_v) == bool:
-              if arg_v:
-                cmd += " -" + arg_k
-            else:
-              cmd += " -" + arg_k + " " + str(arg_v)
-
-          cmd += " " + path
-
-        commands.append(cmd)
+    commands.append(cmd)
 
   return commands
 

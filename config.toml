@@ -49,6 +49,9 @@ qualified_quality_phred = 20
 ref_file = 'Mtex-Abuab_RBK.fa'
 prep_ext = '.clean.fastq.gz'
 
+[options.bwa_index]
+t = 8
+
 [options.bwa_mem]
 t = 8
 
