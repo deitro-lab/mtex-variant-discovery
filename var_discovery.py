@@ -105,9 +105,9 @@ def main():
     affix="suffix",
     flags=options["input"]["fastp"]["read_flags"]
   )
-  
+
   if not run_args.no_preprocess:
-    fastp_cmd = prlprep.alt_prep_reads(
+    fastp_cmd = prlprep.prep_reads(
       paired_coll=read_pc,
       in_dir=dir_list["in_dir"],
       out_dir=dir_list["out_dir"],

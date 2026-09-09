@@ -49,10 +49,14 @@ def strip_ext(path, ext):
 def filter_files(dir, ext):
   files = os.listdir(dir)
 
+  if isinstance(ext, str):
+    ext = (ext,)
+
   if not os.path.exists(dir):
     raise ValueError
-  if ext[0] != '.':
-    raise ValueError
+  for e in ext:
+    if e[0] != '.':
+      raise ValueError
 
   # filter files
   filtered = []
