@@ -50,7 +50,8 @@ def collate_sam(map_file, out_dir=None, temp_dir=None, mode="inout", options=dic
   except ValueError:
     raise
 
-  cmd = "samtools collate"
+  base_name = os.path.splitext(os.path.basename(map_file))[0]
+  cmd = f"samtools collate -T {os.path.join(temp_dir, base_name)}"
   if mode == "inout" or mode == "out":
     cmd += " -o"
   else:
@@ -66,7 +67,7 @@ def collate_sam(map_file, out_dir=None, temp_dir=None, mode="inout", options=dic
 
   return cmd
 
-def fixmate_sam(map_file, out_dir=None, temp_dir=None, mode="inout", options=dict()):
+def fixmate_sam(map_file, out_dir=None, temp_dir=".", mode="inout", options=dict()):
   logger = logging.getLogger(__name__)
 
   try:
@@ -99,15 +100,15 @@ def sort_sam(map_file, out_dir=None, temp_dir=None, sorting="", mode="inout", op
     raise
   if not isinstance(sorting, str):
     raise ValueError
-
-  cmd = "samtools sort"
+  
+  base_name = os.path.splitext(os.path.basename(map_file))[0]
+  cmd = f"samtools sort -T {os.path.join(temp_dir, base_name)}"
   if sorting.lower() == "n" or (sorting.startswith("t ") and len(sorting.strip()) > 2):
     cmd += " -" + sorting
 
   for opt in prlutil.to_optstring(options):
     cmd += " " + opt
 
-  base_name = os.path.splitext(os.path.basename(map_file))[0]
   if mode == "inout" or mode == "out":
     if "O" in options.keys():
       cmd += " -o " + os.path.join(out_dir, base_name + "." + options["O"].lower())
@@ -118,4 +119,29 @@ def sort_sam(map_file, out_dir=None, temp_dir=None, sorting="", mode="inout", op
   if mode == "inout" or mode == "in":
     cmd += " " + map_file
 
+  return cmd
+
+def markdup_sam(map_file, out_dir=None, temp_dir=None, mode="inout", options=dict()):
+  logger = logging.getLogger(__name__)
+
+  try:
+    check_args(map_file, out_dir, temp_dir, mode)
+  except ValueError:
+    raise
+
+  base_name = os.path.splitext(os.path.basename(map_file))[0]
+  cmd = f"samtools markdup -T {os.path.join(temp_dir, base_name)}"
+  for opt in prlutil.to_optstring(options):
+    cmd += " " + opt
+
+  base_name = os.path.splitext(os.path.basename(map_file))[0]
+  if mode == "inout" or mode == "in":
+    cmd += " " + map_file
+  if "O" in options.keys():
+    cmd += " " + os.path.join(out_dir, base_name + "." + options["O"].lower())
+  elif "output-fmt" in options.keys():
+    cmd += " " + os.path.join(out_dir, base_name + "." + options["output-fmt"].lower())
+  else:
+    cmd += " " + os.path.join(out_dir, base_name + ".bam")
+    
   return cmd

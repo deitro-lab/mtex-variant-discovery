@@ -61,14 +61,24 @@ mode = "pipe"
 [options.sam_collate]
 threads = 8
 output-fmt = 'BAM'
+u = true
 
 [options.sam_fixmate]
 threads = 8
 output-fmt = 'BAM'
+m = true
+u = true
 
 [options.sam_sort]
 threads = 8
 output-fmt = 'BAM'
+
+[options.sam_markdup]
+threads = 8
+output-fmt = 'BAM'
+r = true
+u = true
+s = true
 
 [options.bcftools_mpileup]
 threads = 8
