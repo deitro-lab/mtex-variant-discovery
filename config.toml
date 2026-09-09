@@ -66,6 +66,10 @@ output-fmt = 'BAM'
 threads = 8
 output-fmt = 'BAM'
 
+[options.sam_sort]
+threads = 8
+output-fmt = 'BAM'
+
 [options.bcftools_mpileup]
 threads = 8
 ambig-reads = 'drop'

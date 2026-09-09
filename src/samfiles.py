@@ -89,3 +89,33 @@ def fixmate_sam(map_file, out_dir=None, temp_dir=None, mode="inout", options=dic
     cmd += " " + os.path.join(out_dir, base_name + ".bam")
     
   return cmd
+
+def sort_sam(map_file, out_dir=None, temp_dir=None, sorting="", mode="inout", options=dict()):
+  logger = logging.getLogger(__name__)
+
+  try:
+    check_args(map_file, out_dir, temp_dir, mode)
+  except ValueError:
+    raise
+  if not isinstance(sorting, str):
+    raise ValueError
+
+  cmd = "samtools sort"
+  if sorting.lower() == "n" or (sorting.startswith("t ") and len(sorting.strip()) > 2):
+    cmd += " -" + sorting
+
+  for opt in prlutil.to_optstring(options):
+    cmd += " " + opt
+
+  base_name = os.path.splitext(os.path.basename(map_file))[0]
+  if mode == "inout" or mode == "out":
+    if "O" in options.keys():
+      cmd += " -o " + os.path.join(out_dir, base_name + "." + options["O"].lower())
+    elif "output-fmt" in options.keys():
+      cmd += " -o " + os.path.join(out_dir, base_name + "." + options["output-fmt"].lower())
+    else:
+      cmd += " -o " + os.path.join(out_dir, base_name + ".bam")
+  if mode == "inout" or mode == "in":
+    cmd += " " + map_file
+
+  return cmd
