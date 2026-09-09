@@ -145,15 +145,22 @@ def main():
       else:  
         prlutil.run_serial(idx_cmd)
 
-  # Step 2.2: Read mapping
+  # Step 2.2: Read mapping.
+  clean_pc = prlutil.make_paired_coll(
+    dir=dir_list["out_dir"],
+    ext=".clean.fastq.gz",
+    affix="suffix",
+    flags=options["input"]["fastp"]["read_flags"]
+  )
+
   if not run_args.no_map:
     map_cmd = prlmap.map_reads(
-      aligner=run_args.aligner,
+      paired_coll=clean_pc,
       in_dir=dir_list["out_dir"],
-      ref_dir=dir_list["ref_dir"],
+      ref=os.path.join(dir_list["ref_dir"], options["input"]["bwa_mem"]["ref"]),
       out_dir=dir_list["out_dir"],
-      in_opts={**copy.copy(options["input"]["fastp"]), **copy.copy(options["input"]["bwa_mem"])},
-      **copy.copy(options["options"]["bwa_mem"])
+      aligner=run_args.aligner,
+      options=copy.copy(options["options"]["bwa_mem"])
     )
 
     logger.info("[%s] Performing read mapping...", step)

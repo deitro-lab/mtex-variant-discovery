@@ -32,92 +32,66 @@ def index_refs(aligner="bwa-mem2", ref_dir=".", options=dict()):
       continue
 
     processed.add(path)
+
     if aligner == "bwa-mem2":
       cmd = f"bwa-mem2 index {path}"
     elif aligner == "minibwa":
       cmd = "minibwa index"
-      for opt in prlutil.to_optstring(options):
-        cmd += " " + opt
-      cmd += " " + path
+
+    for opt in prlutil.to_optstring(options):
+      cmd += " " + opt
+    cmd += " " + path
 
     commands.append(cmd)
 
   return commands
 
-def map_reads(aligner, in_dir, ref_dir, out_dir, in_opts, **options):
+def map_reads(paired_coll, in_dir, ref=None, out_dir=None, aligner="bwa-mem2", options=dict()):
   logger = logging.getLogger(__name__)
   faext = (".fasta", ".fa", ".fna", ".fas")
-  flag_type = in_opts["flag_type"]
-  r1_flag = in_opts["read1_flag"]
-  r2_flag = in_opts["read2_flag"]
-  prep_ext = in_opts["prep_ext"]
 
+  if in_dir == None:
+    raise ValueError
   if not os.path.isdir(in_dir):
-    logger.error("Input directory not found.")
-    return []
-  if not os.path.isdir(ref_dir):
-    logger.error("Reference directory not found.")
-    return []
+    logger.error("Specified input directory not found.")
+    raise ValueError
   if not os.path.isdir(out_dir):
-    logger.error("Output directory not found.")
-    return []
-  
-  if "ref_file" not in in_opts:
-    logger.error("No reference file specified.")
-    return []
-  else:
-    ref = os.path.join(ref_dir, in_opts["ref_file"])
-    if not ref.endswith(faext) or not os.path.exists(ref):
-      logger.error("Specified reference file is invalid.")
-      return []
-  
-  options_list = []
-  processed = set()
-  
-  files = filter(lambda c: c.endswith(prep_ext), os.listdir(in_dir))
-  for f in files:
-    path = os.path.join(in_dir, f)
-    
-    if path in processed:
-      continue
-
-    if prlutil.match_flag(f, r2_flag, flag_type):
-      continue
-
-    processed.add(path)
-
-    if f.startswith("Undetermined"):
-      continue
-
-    if prlutil.match_flag(f, r1_flag, flag_type):
-      opt = {"args": options}
-      opt["read1_file"] = path
-      read_dir, base_name = os.path.dirname(path), os.path.basename(path)
-      mate_path = os.path.join(read_dir, base_name.replace(r1_flag, r2_flag))        
-      if os.path.exists(mate_path):
-        # TODO: more robust extraction of read_name
-        opt["read2_file"], opt["read_name"] = mate_path, prlutil.strip_ext(base_name, [prep_ext]).replace(r1_flag, '')
-        processed.add(mate_path)
-        options_list.append(opt)
-      else:
-        continue
+    logger.error("Specified output directory not found.")
+    raise ValueError
+  if not os.path.exists(ref):
+    logger.error("Specified reference file not found.")
+    raise ValueError
+  if set(paired_coll["ext"]) <= set(faext):
+    logger.error("Invalid file type(s) detected.")
+    raise ValueError
+  if not is_indexed(aligner, ref):
+    logger.error("Missing index files.")
+    raise ValueError
 
   commands = []
-  for opt in options_list:
+
+  processed = set()
+  
+  for base_name, read_pair in zip(paired_coll["items"], prlutil.get_files_from_coll(paired_coll)):
+    r1 = os.path.join(in_dir, read_pair[0])
+    r2 = os.path.join(in_dir, read_pair[1])
+    if not os.path.exists(r1) or not os.path.exists(r2):
+      continue
+    if processed >= set(read_pair):
+      continue
+
+    processed.update(read_pair)
+
     if aligner == "bwa-mem2":
       cmd = "bwa-mem2 mem"
     elif aligner == "minibwa":
       cmd = "minibwa map"
 
-    for arg_k, arg_v in opt["args"].items():
-      if type(arg_v) == bool:
-        if arg_v:
-          cmd += " -" + arg_k
-      else:
-        cmd += " -" + arg_k + " " + str(arg_v)
+    for opt in prlutil.to_optstring(options):
+      cmd += " " + opt
 
-    cmd += " " + ref + " " + opt["read1_file"] + " " + opt["read2_file"]
-    cmd += " > " + os.path.join(out_dir, opt["read_name"] + ".sam")
+    if aligner == "bwa-mem2" or aligner == "minibwa":
+      cmd += f" {ref} {r1} {r2} > {os.path.join(out_dir, base_name + '.sam')}"
     
     commands.append(cmd)
 

@@ -7,10 +7,12 @@ import os
 
 import src.utilities as prlutil
 
-def prep_reads(paired_coll, in_dir, out_dir=None, out_flag=".clean", rep_dir=None, options=dict()):
+def prep_reads(paired_coll, in_dir=None, out_dir=None, out_flag=".clean", rep_dir=None, options=dict()):
   logger = logging.getLogger(__name__)
   fqext = (".fq", ".fastq", ".fq.gz", ".fastq.gz")
 
+  if in_dir == None:
+    raise ValueError
   if not os.path.isdir(in_dir):
     logger.error("Specified input directory not found.")
     raise ValueError

@@ -46,7 +46,7 @@ length_required = 80
 qualified_quality_phred = 20
 
 [input.bwa_mem]
-ref_file = 'Mtex-Abuab_RBK.fa'
+ref = 'Mtex-Abuab_RBK.norm.fa'
 prep_ext = '.clean.fastq.gz'
 
 [options.bwa_index]
