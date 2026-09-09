@@ -99,13 +99,21 @@ def main():
   step = 1
 
   # Step 1: preprocessing
+  read_pc = prlutil.make_paired_coll(
+    dir=dir_list["in_dir"],
+    ext=".fastq.gz",
+    affix="suffix",
+    flags=options["input"]["fastp"]["read_flags"]
+  )
+  
   if not run_args.no_preprocess:
-    fastp_cmd = prlprep.prep_reads(
+    fastp_cmd = prlprep.alt_prep_reads(
+      paired_coll=read_pc,
       in_dir=dir_list["in_dir"],
       out_dir=dir_list["out_dir"],
+      out_flag=".clean",
       rep_dir=dir_list["rep_dir"],
-      flags=copy.copy(options["input"]["fastp"]),
-      **copy.copy(options["options"]["fastp"])
+      options=copy.copy(options["options"]["fastp"])
     )
 
     logger.info("[%s] Performing preprocessing...", step)

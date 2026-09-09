@@ -7,77 +7,51 @@ import os
 
 import src.utilities as prlutil
 
-def prep_reads(in_dir, out_dir, rep_dir = None, flags = {"flag_type": "suffix", "read1_flag": "_1", "read2_flag": "_2"}, **options):
+def prep_reads(paired_coll, in_dir, out_dir=None, out_flag=".clean", rep_dir=None, options=dict()):
   logger = logging.getLogger(__name__)
   fqext = (".fq", ".fastq", ".fq.gz", ".fastq.gz")
-  flag_type = flags["flag_type"]
-  r1_flag = flags["read1_flag"]
-  r2_flag = flags["read2_flag"]
-  
+
   if not os.path.isdir(in_dir):
-    logger.error("Input directory not found.")
-    return []
-      
-  options_list = []
-  processed = set()
+    logger.error("Specified input directory not found.")
+    raise ValueError
+  if not os.path.isdir(out_dir):
+    logger.error("Specified output directory not found.")
+    raise ValueError
+  if not os.path.isdir(rep_dir):
+    logger.error("Specified report directory not found.")
+    raise ValueError
+  if set(paired_coll["ext"]) <= set(fqext):
+    logger.error("Invalid file type(s) detected.")
+    raise ValueError
   
-  files = os.listdir(in_dir)
-  for f in files:
-    path = os.path.join(in_dir, f)
-    if os.path.isdir(path): # skip subdir
-      continue
-    
-    if not f.endswith(fqext):
-      continue
+  if out_dir == None:
+    out_dir = in_dir
+  if rep_dir == None:
+    rep_dir = out_dir
+  if out_flag[0] != ".":
+    out_flag = "." + out_flag
 
-    if path in processed:
-      continue
-
-    if prlutil.match_flag(f, r2_flag, flag_type):
-      continue
-
-    processed.add(path)
-
-    if f.startswith("Undetermined"):
-      continue
-
-    if prlutil.match_flag(f, r1_flag, flag_type):
-      opt = {"args": options}
-      opt["read1_file"] = path
-      read_dir, base_name = os.path.dirname(path), os.path.basename(path)
-      mate_path = os.path.join(read_dir, base_name.replace(r1_flag, r2_flag))        
-      if os.path.exists(mate_path):
-        # TODO: more robust extraction of read_name
-        opt["read2_file"], opt["read_name"] = mate_path, prlutil.strip_ext(base_name, fqext).replace(r1_flag, '')
-        processed.add(mate_path)
-        options_list.append(opt)
-      else:
-        continue
-
+  ext = paired_coll["ext"]
   commands = []
-  for opt in options_list:
-    cmd = "fastp -i " + opt["read1_file"] + " -I " + opt["read2_file"]
-    if not os.path.exists(out_dir):
-      os.makedirs(out_dir)
-    out_prefix1 = os.path.join(out_dir, os.path.basename(prlutil.strip_ext(opt["read1_file"], fqext)))
-    cmd += " -o " + out_prefix1 + ".clean.fastq.gz"
-    out_prefix2 = os.path.join(out_dir, os.path.basename(prlutil.strip_ext(opt["read2_file"], fqext)))
-    cmd += " -O " + out_prefix2 + ".clean.fastq.gz"
+  processed = set()
 
-    for arg_k, arg_v in opt["args"].items():
-      if type(arg_v) == bool:
-        if arg_v:
-          cmd += " --" + arg_k
-      else:
-        cmd += " --" + arg_k + "=" + str(arg_v)
+  for base_name, read_pair in zip(paired_coll["items"], prlutil.get_files_from_coll(paired_coll)):
+    r1 = os.path.join(in_dir, read_pair[0])
+    r1_out = r1[:-len(ext)] + out_flag + ext
+    r2 = os.path.join(in_dir, read_pair[1])
+    r2_out = r2[:-len(ext)] + out_flag + ext
+    if not os.path.exists(r1) or not os.path.exists(r2):
+      continue
+    if processed >= set(read_pair):
+      continue
 
-    if rep_dir != None:
-      if not os.path.exists(rep_dir):
-        os.makedirs(rep_dir)
-      
-      report_file = os.path.join(rep_dir, opt["read_name"])
-      cmd += " --html=" + report_file + ".html --json=" + report_file + ".json"
-    
+    processed.update(read_pair)
+
+    cmd = f"fastp -i {r1} -I {r2} -o {r1_out} -O {r2_out}"
+    for opt in prlutil.to_optstring(options):
+      cmd += " " + opt
+    cmd += f" --html {os.path.join(rep_dir, base_name + '.html')} --json {os.path.join(rep_dir, base_name + '.json')}"
+
     commands.append(cmd)
 
   return commands

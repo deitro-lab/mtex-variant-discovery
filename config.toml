@@ -35,6 +35,7 @@ partition = ['batch','debug']
 flag_type = 'suffix'
 read1_flag = '_1'
 read2_flag = '_2'
+read_flags = ['_1', '_2']
 
 [options.fastp]
 thread = 4

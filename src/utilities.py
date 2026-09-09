@@ -97,6 +97,7 @@ def make_paired_coll(dir, ext, affix="suffix", flags=("_1","_2")):
     "affix": affix,
     "f1": flags[0],
     "f2": flags[1],
+    "ext": ext,
     "items": []
   }
 
@@ -104,6 +105,33 @@ def make_paired_coll(dir, ext, affix="suffix", flags=("_1","_2")):
   paired_coll["items"] = [f for f, i in Counter(files).items() if i > 1]
 
   return paired_coll
+
+def get_files_from_coll(paired_coll):
+  ext = paired_coll["ext"]
+  affix = paired_coll["affix"]
+  f1 = paired_coll["f1"]
+  f2 = paired_coll["f2"]
+  if affix == "prefix":
+    fnames = [[f1 + b + ext, f2 + b + ext] for b in paired_coll["items"]]
+  elif affix == "suffix":
+    fnames = [[b + f1 + ext,  b + f2 + ext] for b in paired_coll["items"]]
+  return fnames
+
+def to_optstring(options):
+  optstring = []
+  for opt, val in options.items():
+    if len(opt) > 1:
+      prefix = "--"
+    else:
+      prefix = "-"
+
+    if isinstance(val, bool):
+      if val:
+        optstring.append(prefix + opt)
+    else:
+      optstring.append(prefix + opt + " " + str(val))
+
+  return optstring
 
 def match_flag(filename, flag, pos):
   if pos == "suffix":
@@ -116,11 +144,6 @@ def match_flag(filename, flag, pos):
         return flag in filename
     else:
       return ("." + flag in filename) or ("_" + flag in filename) or ("-" + flag in filename)
-
-def strip_ext(filename, ext):
-  for e in ext:
-    if filename.endswith(e):
-      return filename[:-len(e)]
 
 def run_command(cmd):
   logger = logging.getLogger(__name__)
