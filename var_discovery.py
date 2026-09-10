@@ -31,6 +31,8 @@ def parse_options():
   parser.add_argument("-d", "--no-dedup", action="store_true", help="Disable sorting & deduplication of alignment files")
   parser.add_argument("-g", "--no-genotyping", action="store_true", help="Disable estimation of genotype likelihoods")
   parser.add_argument("--aligner", default="bwa-mem2", help="Specify alignment tool (bwa-mem2/minibwa)")
+  parser.add_argument("-l", "--log", type=str, default="dc", help="Configure logging [c: console, d: time-specific files, s: single file]")
+  parser.add_argument("-q", "--quiet", action="store_true", help="Disable logging")
 
   try:
     args = parser.parse_args()
@@ -44,28 +46,48 @@ def parse_options():
   return args
   
 def main():
-  log_name = time.strftime("%y%m%d%H%M%S") + ".log"
   logging.basicConfig(
-    filename=log_name,
-    encoding="utf-8",
-    filemode="a",
     level=logging.DEBUG,
-    format="[%(asctime)s] %(levelname)s: %(message)s",
-    datefmt="%Y-%m-%d %H:%M:%S"
+    handlers=[]
   )
   logger = logging.getLogger()
-  console_handler = logging.StreamHandler()
-  console_handler.setLevel("INFO")
-  logger.addHandler(console_handler)
-
+  logger.propagate = False
+  logform = logging.Formatter(
+    fmt="[%(asctime)s] %(levelname)s: %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S"
+  )
+      
   time_start = time.perf_counter()
-  logging.info("Run started at %s", time_start)
 
   try:
     run_args = parse_options()
   except Exception:
-    logger.critical("Unable to process args. Terminating program...")
+    print("Unable to process args. Terminating program...")
     sys.exit(1)
+
+  if run_args.quiet:
+    run_args.log = ""
+  if run_args.log.find("d") != -1:
+    log_name = time.strftime("%y%m%d%H%M%S") + ".log"
+    logfile_handler = logging.FileHandler(log_name, "a", "utf-8")
+    logfile_handler.setLevel("DEBUG")
+    logfile_handler.setFormatter(logform)
+    logger.addHandler(logfile_handler)
+  elif run_args.log.find("s") != -1:
+    log_name = f"{os.path.basename(__file__)[:-3]}.log"
+    logfile_handler = logging.FileHandler(log_name, "a", "utf-8")
+    logfile_handler.setLevel("DEBUG")
+    logfile_handler.setFormatter(logform)
+    logger.addHandler(logfile_handler)
+  if run_args.log.find("c") != -1:
+    console_handler = logging.StreamHandler()
+    console_handler.setLevel("INFO")
+    console_handler.setFormatter(logform)
+    logger.addHandler(console_handler)
+  if {"d","s","c"}.isdisjoint(set(run_args.log)):
+    logging.disable()
+  
+  logging.info("Run started at %s", time_start)
   logging.debug("Current run parameters: %s", str(run_args.__dict__))
   
   config_dir = run_args.config
