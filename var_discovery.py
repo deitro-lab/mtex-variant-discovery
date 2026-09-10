@@ -175,10 +175,10 @@ def main():
   # Step 3: Deduplication
   if not run_args.no_dedup:
     dedup_options = {
-      "collate": options["options"]["sam_collate"],
-      "fixmate": options["options"]["sam_fixmate"],
-      "sort": options["options"]["sam_sort"],
-      "markdup": options["options"]["sam_markdup"]
+      "collate": copy.copy(options["options"]["sam_collate"]),
+      "fixmate": copy.copy(options["options"]["sam_fixmate"]),
+      "sort": copy.copy(options["options"]["sam_sort"]),
+      "markdup": copy.copy(options["options"]["sam_markdup"])
     }
     sam_cmd = prlsam.dedup_files(
       files=prlutil.filter_files(dir_list["out_dir"], ".sam"),

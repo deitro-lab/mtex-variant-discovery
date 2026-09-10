@@ -160,6 +160,25 @@ def markdup_sam(map_file=None, out_dir=None, temp_dir=None, mode="inout", option
   return (cmd, f_out)
 
 def dedup_files(files, in_dir, out_dir, temp_dir, opt_set):
+  logger = logging.getLogger(__name__)
+
+  if not os.path.isdir(in_dir):
+    logger.error("Specified input directory not found.")
+    raise ValueError
+  if not os.path.isdir(out_dir):
+    logger.error("Specified output directory not found.")
+    raise ValueError
+  if not os.path.isdir(temp_dir):
+    logger.error("Specified temporary files directory not found.")
+    raise ValueError
+  if not {"collate","fixmate","sort","markdup"} <= set(opt_set.keys()):
+    logger.error("Missing options for samtools collate/fixmate/sort/markdup.")
+    raise ValueError
+
+  if not "m" in opt_set["fixmate"].keys():
+    opt_set["fixmate"].update({"m": True})
+  for k in ("n", "N", "t"):
+    opt_set["sort"].pop(k, None)
 
   commands = []
 
@@ -169,6 +188,8 @@ def dedup_files(files, in_dir, out_dir, temp_dir, opt_set):
     cmd_set = []
     path = os.path.join(in_dir, f)
 
+    if not os.path.exists(path):
+      continue
     if path in processed:
       continue
 
