@@ -35,7 +35,7 @@ def init_project(folders):
 
 def strip_ext(path, ext):
   if isinstance(ext, str):
-    ext = [ext]
+    ext = (ext,)
 
   for e in ext:
     if e[0] != '.':
@@ -43,8 +43,8 @@ def strip_ext(path, ext):
 
     if path.endswith(e):
       return path[:-len(e)]
-    else:
-      return path
+    
+  return path
     
 def filter_files(dir, ext):
   files = os.listdir(dir)
