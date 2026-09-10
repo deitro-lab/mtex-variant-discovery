@@ -79,8 +79,11 @@ output-fmt = 'BAM'
 r = true
 s = true
 
+[options.sam_faidx]
+threads = 4
+
 [options.bcftools_mpileup]
 threads = 8
 ambig-reads = 'drop'
-annotate = 'AD,SD,SP'
+annotate = '"AD,SD,SP"'
 output-type = 'v'

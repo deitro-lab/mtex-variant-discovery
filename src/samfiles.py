@@ -159,6 +159,32 @@ def markdup_sam(map_file=None, out_dir=None, temp_dir=None, mode="inout", option
     
   return (cmd, f_out)
 
+def index_sam(ref_dir, options=dict()):
+  faext = (".fasta", ".fa", ".fa.gz", ".fasta.gz")
+  commands = []
+
+  if not os.path.isdir(ref_dir):
+    raise ValueError
+
+  processed = set() 
+
+  for file in prlutil.filter_files(ref_dir, faext):
+    path = os.path.join(ref_dir, file)
+
+    if os.path.exists(path + ".fai"):
+      continue
+
+    processed.add(path)
+
+    cmd = f"samtools faidx {path}"
+
+    for opt in prlutil.to_optstring(options):
+      cmd += " " + opt
+
+    commands.append(cmd)
+
+  return commands
+
 def dedup_files(files, in_dir, out_dir, temp_dir, opt_set):
   logger = logging.getLogger(__name__)
 
