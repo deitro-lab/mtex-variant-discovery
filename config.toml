@@ -67,17 +67,16 @@ u = true
 threads = 8
 output-fmt = 'BAM'
 m = true
-u = true
 
 [options.sam_sort]
 threads = 8
 output-fmt = 'BAM'
+u = true
 
 [options.sam_markdup]
 threads = 8
 output-fmt = 'BAM'
 r = true
-u = true
 s = true
 
 [options.bcftools_mpileup]

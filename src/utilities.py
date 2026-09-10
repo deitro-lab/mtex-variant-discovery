@@ -174,12 +174,14 @@ def run_command(cmd):
   logger.debug("Command execution completed.")
   return run_result.stdout
 
-def run_pline(cmd_set):
+def run_pipeline(cmd_set):
   logger = logging.getLogger(__name__)
-  # logger.info("Running command: %s", cmd)
+  logger.info("Running pipeline - %s steps:", len(cmd_set))
   try:
+    logger.info("Running command: %s", cmd_set[0])
     pipe_in = subprocess.run(cmd_set.pop(0), shell=True, capture_output=True, text=True, check=True)
     for c in cmd_set:
+      logger.info("Running command: %s", c)
       run_result = subprocess.run(c, shell=True, input=pipe_in.stdout, capture_output=True, text=True, check=True)
       pipe_in = run_result
   except subprocess.CalledProcessError as err:

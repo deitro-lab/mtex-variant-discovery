@@ -11,6 +11,7 @@ import time
 import src.utilities as prlutil
 import src.preprocessing as prlprep
 import src.mapping as prlmap
+import src.samfiles as prlsam
 
 TOOL_NAME = "AbacaVD"
 VARDIS_VERSION = "0.1"
@@ -145,7 +146,7 @@ def main():
       else:  
         prlutil.run_serial(idx_cmd)
 
-  # Step 2.2: Read mapping.
+  # Step 2.2: Read mapping
   clean_pc = prlutil.make_paired_coll(
     dir=dir_list["out_dir"],
     ext=".clean.fastq.gz",
@@ -170,6 +171,30 @@ def main():
         logger.info("#%s ~ %s", i, c)
     else:
       prlutil.run_serial(map_cmd)
+
+  # Step 3: Deduplication
+  if not run_args.no_dedup:
+    dedup_options = {
+      "collate": options["options"]["sam_collate"],
+      "fixmate": options["options"]["sam_fixmate"],
+      "sort": options["options"]["sam_sort"],
+      "markdup": options["options"]["sam_markdup"]
+    }
+    sam_cmd = prlsam.dedup_files(
+      files=prlutil.filter_files(dir_list["out_dir"], ".sam"),
+      in_dir=dir_list["out_dir"],
+      out_dir=dir_list["out_dir"],
+      temp_dir=dir_list["tmp_dir"],
+      opt_set=dedup_options
+    )
+
+    logger.info("[%s] Performing SAM file processing...", step)
+    step += 1
+    if run_args.is_dryrun:
+      for c, i in zip(map_cmd, range(1, len(map_cmd)+1)):
+        logger.info("#%s ~ %s", i, c)
+    else:
+      prlutil.run_pipeline(sam_cmd)
 
   time_end = time.perf_counter()
   time_span = timedelta(seconds=time.perf_counter()-time_start)
