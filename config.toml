@@ -82,6 +82,10 @@ s = true
 [options.sam_faidx]
 threads = 4
 
+[input.bcftools_mpileup]
+ref = 'Mtex-Abuab_RBK.norm.fa'
+flag = ".dedup"
+
 [options.bcftools_mpileup]
 threads = 8
 ambig-reads = 'drop'

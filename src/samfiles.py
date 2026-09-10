@@ -173,6 +173,8 @@ def index_sam(ref_dir, options=dict()):
 
     if os.path.exists(path + ".fai"):
       continue
+    if path in processed:
+      continue
 
     processed.add(path)
 

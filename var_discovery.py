@@ -12,6 +12,7 @@ import src.utilities as prlutil
 import src.preprocessing as prlprep
 import src.mapping as prlmap
 import src.samfiles as prlsam
+import src.varcall as prlvar
 
 TOOL_NAME = "AbacaVD"
 VARDIS_VERSION = "0.1"
@@ -122,14 +123,14 @@ def main():
   step = 1
 
   # Step 1: preprocessing
-  read_pc = prlutil.make_paired_coll(
-    dir=dir_list["in_dir"],
-    ext=".fastq.gz",
-    affix="suffix",
-    flags=options["input"]["fastp"]["read_flags"]
-  )
-
   if not run_args.no_preprocess:
+    read_pc = prlutil.make_paired_coll(
+      dir=dir_list["in_dir"],
+      ext=".fastq.gz",
+      affix="suffix",
+      flags=options["input"]["fastp"]["read_flags"]
+    )
+
     fastp_cmd = prlprep.prep_reads(
       paired_coll=read_pc,
       in_dir=dir_list["in_dir"],
@@ -167,16 +168,18 @@ def main():
         logger.info("No reference file for indexing.")
       else:  
         prlutil.run_serial(idx_cmd)
+  else:
+    logger.debug("Skipped reference indexing step.")
 
   # Step 2.2: Read mapping
-  clean_pc = prlutil.make_paired_coll(
-    dir=dir_list["out_dir"],
-    ext=".clean.fastq.gz",
-    affix="suffix",
-    flags=options["input"]["fastp"]["read_flags"]
-  )
-
   if not run_args.no_map:
+    clean_pc = prlutil.make_paired_coll(
+      dir=dir_list["out_dir"],
+      ext=".clean.fastq.gz",
+      affix="suffix",
+      flags=options["input"]["fastp"]["read_flags"]
+    )
+
     map_cmd = prlmap.map_reads(
       paired_coll=clean_pc,
       in_dir=dir_list["out_dir"],
@@ -193,6 +196,8 @@ def main():
         logger.info("#%s ~ %s", i, c)
     else:
       prlutil.run_serial(map_cmd)
+  else:
+    logger.debug("Skipped read mapping step.")
 
   # Step 3: Deduplication
   if not run_args.no_dedup:
@@ -217,6 +222,41 @@ def main():
         logger.info("#%s ~ %s", i, c)
     else:
       prlutil.run_pipeline(sam_cmd)
+  else:
+    logger.debug("Skipped SAM file processing step.")
+
+  # Step 4: Variant Calling
+  if not run_args.no_genotyping:
+    fai_cmd = prlsam.index_sam(
+      ref_dir=dir_list["ref_dir"],
+      options=copy.copy(options["options"]["sam_faidx"])
+    )
+
+    logger.info("[%s] Performing reference indexing...", step)
+    step += 1
+    if run_args.is_dryrun:
+      for c, i in zip(fai_cmd, range(1, len(fai_cmd)+1)):
+        logger.info("#%s ~ %s", i, c)
+    else:
+      prlutil.run_parallel(fai_cmd, options["workers"])
+
+    gen_cmd = prlvar.bcft_mpileup(
+      in_dir=dir_list["out_dir"],
+      flag=options["input"]["bcftools_mpileup"]["flag"],
+      out_dir=dir_list["out_dir"],
+      ref=os.path.join(dir_list["ref_dir"], options["input"]["bcftools_mpileup"]["ref"]),
+      options=copy.copy(options["options"]["bcftools_mpileup"])
+    )
+
+    logger.info("[%s] Generating genotype likelihoods...", step)
+    step += 1
+    if run_args.is_dryrun:
+      for c, i in zip(gen_cmd, range(1, len(gen_cmd)+1)):
+        logger.info("#%s ~ %s", i, c)
+    else:
+      prlutil.run_serial(gen_cmd) 
+  else:
+    logger.debug("Skipped variant calling step.")
 
   time_end = time.perf_counter()
   time_span = timedelta(seconds=time.perf_counter()-time_start)
