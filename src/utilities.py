@@ -176,32 +176,39 @@ def run_command(cmd):
 
 def run_pipeline(cmd_set):
   logger = logging.getLogger(__name__)
-  logger.info("Running pipeline - %s steps:", len(cmd_set))
-  try:
-    logger.info("Running command: %s", cmd_set[0])
-    pipe_in = subprocess.run(cmd_set.pop(0), shell=True, capture_output=True, text=True, check=True)
-    for c in cmd_set:
-      logger.info("Running command: %s", c)
-      run_result = subprocess.run(c, shell=True, input=pipe_in.stdout, capture_output=True, text=True, check=True)
-      pipe_in = run_result
-  except subprocess.CalledProcessError as err:
-    if err.returncode == 127:
-      logger.error(f"Command execution failed: Command not found. (127)")
-    elif err.returncode == 126:
-      logger.error(f"Command execution failed: Command can't be executed. (126)")
-    elif err.returncode == 130:
-      logger.error(f"Command execution failed: Command run interrupted. (130)")
-    else:
-      logger.error(f"Command execution failed: Shell raised exit code {err.returncode}")
-    return None
-  except Exception as err:
-    logger.error("An unexpected error occurred: %s", err)
-    return None
+  logger.info("Queuing %s command(s):", len(cmd_set))
 
-  if run_result.stderr != "":
-    logger.error(run_result.stderr)
+  result_set = []
+
+  for pipeline in cmd_set:
+    logger.info("Running pipeline - %s step(s):", len(pipeline))
+    try:
+      logger.info("Running command: %s", pipeline[0])
+      pipe_in = subprocess.run(pipeline.pop(0), shell=True, capture_output=True, text=True, check=True)
+      for c in pipeline:
+        logger.info("Running command: %s", c)
+        run_result = subprocess.run(c, shell=True, input=pipe_in.stdout, capture_output=True, text=True, check=True)
+        pipe_in = run_result
+    except subprocess.CalledProcessError as err:
+      if err.returncode == 127:
+        logger.error(f"Command execution failed: Command not found. (127)")
+      elif err.returncode == 126:
+        logger.error(f"Command execution failed: Command can't be executed. (126)")
+      elif err.returncode == 130:
+        logger.error(f"Command execution failed: Command run interrupted. (130)")
+      else:
+        logger.error(f"Command execution failed: Shell raised exit code {err.returncode}")
+      return None
+    except Exception as err:
+      logger.error("An unexpected error occurred: %s", err)
+      return None
+
+    if run_result.stderr != "":
+      logger.error(run_result.stderr)
+
+    result_set.append(run_result.stdout)
   
-  return run_result.stdout
+  return result_set
 
 def run_parallel(cmd_queue, procs=None):
   logger = logging.getLogger(__name__)
