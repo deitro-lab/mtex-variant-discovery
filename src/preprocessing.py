@@ -39,9 +39,9 @@ def prep_reads(paired_coll, in_dir=None, out_dir=None, out_flag=".clean", rep_di
 
   for base_name, read_pair in zip(paired_coll["items"], prlutil.get_files_from_coll(paired_coll)):
     r1 = os.path.join(in_dir, read_pair[0])
-    r1_out = r1[:-len(ext)] + out_flag + ext
+    r1_out = os.path.join(out_dir, os.path.basename(r1[:-len(ext)])) + out_flag + ext
     r2 = os.path.join(in_dir, read_pair[1])
-    r2_out = r2[:-len(ext)] + out_flag + ext
+    r2_out = os.path.join(out_dir, os.path.basename(r2[:-len(ext)])) + out_flag + ext
     if not os.path.exists(r1) or not os.path.exists(r2):
       continue
     if processed >= set(read_pair):
