@@ -228,7 +228,7 @@ def main():
     logger.info("[%s] Performing SAM file processing...", step)
     step += 1
     if run_args.is_dryrun:
-      for c, i in zip(map_cmd, range(1, len(map_cmd)+1)):
+      for c, i in zip(sam_cmd, range(1, len(sam_cmd)+1)):
         logger.info("#%s ~ %s", i, c)
     else:
       prlutil.run_pipeline(sam_cmd)

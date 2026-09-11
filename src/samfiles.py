@@ -7,15 +7,12 @@ import src.utilities as prlutil
 
 def is_mapfile(path):
   alext = (".sam", ".bam", ".cram")
-  if os.path.exists(path):
-    if path.endswith(alext):
-      return True
-    else:
-      return False
+  if path.endswith(alext):
+    return True
   else:
-    raise ValueError
+    return False
 
-def check_args(map_file, out_dir, temp_dir, mode):
+def check_args(out_dir, temp_dir, mode):
   logger = logging.getLogger(__name__)
   modes = ("inout", "in", "out", "pipe")
 
@@ -24,9 +21,6 @@ def check_args(map_file, out_dir, temp_dir, mode):
     raise ValueError
   if (mode == "inout" or mode == "out") and out_dir == None:
     logger.error("Output directory not specified.")
-    raise ValueError
-  if (mode == "inout" or mode == "in") and not os.path.exists(map_file):
-    logger.error("No valid SAM file found.")
     raise ValueError
   if temp_dir == None:
     logger.error("Temporary files directory not found.")
@@ -42,7 +36,7 @@ def collate_sam(map_file=None, out_dir=None, temp_dir=None, mode="inout", option
   logger = logging.getLogger(__name__)
 
   try:
-    check_args(map_file, out_dir, temp_dir, mode)
+    check_args(out_dir, temp_dir, mode)
   except ValueError:
     raise
 
@@ -69,7 +63,7 @@ def fixmate_sam(map_file, out_dir=None, temp_dir=".", mode="inout", options=dict
   logger = logging.getLogger(__name__)
 
   try:
-    check_args(map_file, out_dir, temp_dir, mode)
+    check_args(out_dir, temp_dir, mode)
   except ValueError:
     raise
 
@@ -98,7 +92,7 @@ def sort_sam(map_file=None, out_dir=None, temp_dir=None, sorting="", mode="inout
   logger = logging.getLogger(__name__)
 
   try:
-    check_args(map_file, out_dir, temp_dir, mode)
+    check_args(out_dir, temp_dir, mode)
   except ValueError:
     raise
   if not isinstance(sorting, str):
@@ -133,7 +127,7 @@ def markdup_sam(map_file=None, out_dir=None, temp_dir=None, mode="inout", option
   logger = logging.getLogger(__name__)
 
   try:
-    check_args(map_file, out_dir, temp_dir, mode)
+    check_args(out_dir, temp_dir, mode)
   except ValueError:
     raise
 
@@ -216,8 +210,6 @@ def dedup_files(files, in_dir, out_dir, temp_dir, opt_set):
     cmd_set = []
     path = os.path.join(in_dir, f)
 
-    if not os.path.exists(path):
-      continue
     if path in processed:
       continue
 
