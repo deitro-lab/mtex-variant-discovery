@@ -62,22 +62,22 @@ t = 8
 mode = "pipe"
 
 [options.sam_collate]
-threads = 8
+# threads = 8
 output-fmt = 'BAM'
 u = true
 
 [options.sam_fixmate]
-threads = 8
+# threads = 8
 output-fmt = 'BAM'
 m = true
 
 [options.sam_sort]
-threads = 8
+# threads = 8
 output-fmt = 'BAM'
 u = true
 
 [options.sam_markdup]
-threads = 8
+# threads = 8
 output-fmt = 'BAM'
 r = true
 s = true
@@ -90,7 +90,7 @@ ref = 'Mtex-Abuab_RBK.norm.fa'
 flag = ".dedup"
 
 [options.bcftools_mpileup]
-threads = 8
+# threads = 8
 ambig-reads = 'drop'
 annotate = '"AD,SD,SP"'
 output-type = 'v'
