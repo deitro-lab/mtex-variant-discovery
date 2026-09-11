@@ -152,10 +152,15 @@ def main():
 
   # Step 2.1: Reference indexing
   if not run_args.no_index:
+    if run_args.aligner == "bwa-mem2":
+      idx_opt = dict()
+    elif run_args.aligner == "minibwa":
+      idx_opt = copy.copy(options["options"]["minibwa_index"])
+
     idx_cmd = prlmap.index_refs(
       aligner=run_args.aligner,
       ref_dir=dir_list["ref_dir"],
-      options=copy.copy(options["options"]["bwa_index"])
+      options=idx_opt
     )
 
     logger.info("[%s] Performing reference indexing...", step)
@@ -173,6 +178,11 @@ def main():
 
   # Step 2.2: Read mapping
   if not run_args.no_map:
+    if run_args.aligner == "bwa-mem2":
+      map_opt = copy.copy(options["options"]["bwamem2_mem"])
+    elif run_args.aligner == "minibwa":
+      map_opt = copy.copy(options["options"]["minibwa_map"])
+
     clean_pc = prlutil.make_paired_coll(
       dir=dir_list["out_dir"],
       ext=".clean.fastq.gz",
@@ -186,7 +196,7 @@ def main():
       ref=os.path.join(dir_list["ref_dir"], options["input"]["bwa_mem"]["ref"]),
       out_dir=dir_list["out_dir"],
       aligner=run_args.aligner,
-      options=copy.copy(options["options"]["bwa_mem"])
+      options=map_opt
     )
 
     logger.info("[%s] Performing read mapping...", step)

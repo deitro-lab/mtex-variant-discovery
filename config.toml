@@ -49,10 +49,13 @@ qualified_quality_phred = 20
 ref = 'Mtex-Abuab_RBK.norm.fa'
 prep_ext = '.clean.fastq.gz'
 
-[options.bwa_index]
+[options.minibwa_index]
 t = 8
 
-[options.bwa_mem]
+[options.bwamem2_mem]
+t = 8
+
+[options.minibwa_map]
 t = 8
 
 [input.samtools]
