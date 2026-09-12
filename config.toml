@@ -1,4 +1,4 @@
-workers = 4
+workers = 2
 
 [directories]
 # Relative paths will be resolved based on project directory
@@ -37,60 +37,60 @@ read1_flag = '_1'
 read2_flag = '_2'
 read_flags = ['_1', '_2']
 
-[options.fastp]
-thread = 4
-trim_poly_g = true
-detect_adapter_for_pe = true
-dont_eval_duplication = true
-length_required = 80
-qualified_quality_phred = 20
-
 [input.bwa_mem]
 ref = 'Mtex-Abuab_RBK.norm.fa'
 prep_ext = '.clean.fastq.gz'
 
-[options.minibwa_index]
-t = 8
-
-[options.bwamem2_mem]
-t = 8
-
-[options.minibwa_map]
-t = 8
-
 [input.samtools]
 mode = "pipe"
-
-[options.sam_collate]
-# threads = 8
-output-fmt = 'BAM'
-u = true
-
-[options.sam_fixmate]
-# threads = 8
-output-fmt = 'BAM'
-m = true
-
-[options.sam_sort]
-# threads = 8
-output-fmt = 'BAM'
-u = true
-
-[options.sam_markdup]
-# threads = 8
-output-fmt = 'BAM'
-r = true
-s = true
-
-[options.sam_faidx]
-threads = 4
 
 [input.bcftools_mpileup]
 ref = 'Mtex-Abuab_RBK.norm.fa'
 flag = ".dedup"
 
+[options.fastp]
+thread = 8
+trim_poly_g = true
+detect_adapter_for_pe = true
+dont_eval_duplication = true
+length_required = 80
+length_limit = 160
+qualified_quality_phred = 20
+
+[options.bwamem2_mem]
+t = 11
+
+[options.minibwa_map]
+t = 11
+
+[options.sam_collate]
+threads = 8
+output-fmt = 'BAM'
+u = true
+
+[options.sam_fixmate]
+threads = 5
+output-fmt = 'BAM'
+m = true
+
+[options.sam_sort]
+threads = 5
+m = "19200M"
+output-fmt = 'BAM'
+u = true
+
+[options.sam_markdup]
+threads = 5
+output-fmt = 'BAM'
+r = true
+s = true
+
+[options.sam_faidx]
+threads = 2
+
 [options.bcftools_mpileup]
-# threads = 8
+threads = 11
+d = 8000
 ambig-reads = 'drop'
 annotate = '"AD,SD,SP"'
 output-type = 'v'
