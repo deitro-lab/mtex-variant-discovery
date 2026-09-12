@@ -18,7 +18,9 @@ for ex in ${ext[@]}; do
         picard NormalizeFasta \
         LINE_LENGTH=100 \
         I=$f \
-        O=$refs/$bname.norm.fa 
+        O=$refs/$bname.norm.fa \
+        VERBOSITY=ERROR \
+        TMP_DIR=${JOB_TMPDIR:-"./tmp/"}
       fi
       awk 'BEGIN{print ARGV[1]} /^>/ {print;next;} {print length($0)} END{print "========"}' $f | uniq >> ./logs/refnorm-ln-check.txt
     fi
