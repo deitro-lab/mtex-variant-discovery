@@ -222,7 +222,7 @@ def main():
       "markdup": copy.copy(options["options"]["sam_markdup"])
     }
     sam_cmd = prlsam.dedup_files(
-      files=prlutil.filter_files(dir_list["out_dir"], ".sam"),
+      files=prlutil.filter_files(dir_list["out_dir"], (".sam",".bam",".cram")),
       in_dir=dir_list["out_dir"],
       out_dir=dir_list["out_dir"],
       temp_dir=dir_list["tmp_dir"],
