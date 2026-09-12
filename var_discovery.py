@@ -16,6 +16,7 @@ import src.varcall as prlvar
 
 TOOL_NAME = "AbacaVD"
 VARDIS_VERSION = "0.1"
+LOG_DIR = "./logs/"
 
 def parse_options():
   logger = logging.getLogger(__name__)
@@ -66,16 +67,19 @@ def main():
     print("Unable to process args. Terminating program...")
     sys.exit(1)
 
+  if not os.path.isdir(LOG_DIR):
+    os.mkdir(LOG_DIR)
+
   if run_args.quiet:
     run_args.log = ""
   if run_args.log.find("d") != -1:
-    log_name = time.strftime("%y%m%d%H%M%S") + ".log"
+    log_name = os.path.join(LOG_DIR, time.strftime("%y%m%d%H%M%S") + ".log")
     logfile_handler = logging.FileHandler(log_name, "a", "utf-8")
     logfile_handler.setLevel("DEBUG")
     logfile_handler.setFormatter(logform)
     logger.addHandler(logfile_handler)
   elif run_args.log.find("s") != -1:
-    log_name = f"{os.path.basename(__file__)[:-3]}.log"
+    log_name = os.path.join(LOG_DIR, f"{os.path.basename(__file__)[:-3]}.log")
     logfile_handler = logging.FileHandler(log_name, "a", "utf-8")
     logfile_handler.setLevel("DEBUG")
     logfile_handler.setFormatter(logform)
