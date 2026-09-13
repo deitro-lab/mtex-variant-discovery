@@ -191,6 +191,8 @@ def index_sam(ref_dir, options=dict()):
 
 def dedup_files(files, in_dir, out_dir, temp_dir, opt_set):
   logger = logging.getLogger(__name__)
+  alext = (".sam", ".bam", ".cram")
+  flags = (".coll", ".fm", ".sorted", ".dedup")
 
   if not os.path.isdir(in_dir):
     logger.error("Specified input directory not found.")
@@ -218,6 +220,8 @@ def dedup_files(files, in_dir, out_dir, temp_dir, opt_set):
     cmd_set = []
     path = os.path.join(in_dir, f)
 
+    if prlutil.strip_ext(f, alext).endswith(flags):
+      continue
     if path in processed:
       continue
 
