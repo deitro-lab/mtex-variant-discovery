@@ -7,10 +7,10 @@ from tomlkit.toml_file import TOMLFile
 
 import src.utilities as prlutil
 
-def get_mem(cpus=1, mem_per_cpu=1):
+def get_mem(cpus=1, mem_per_cpu=4096):
   buffer = 0.8
   min_mem = 768
-  mem = max(math.floor(cpus * mem_per_cpu * buffer * 1000), min_mem)
+  mem = max(math.floor(cpus * mem_per_cpu * buffer), min_mem)
   return f"{mem}M"
 
 def main():
@@ -54,7 +54,7 @@ def main():
     config["options"]["sam_collate"]["threads"] = job["cpt_himid"]-1
     config["options"]["sam_fixmate"]["threads"] = job["cpt_mid"]-1
     config["options"]["sam_sort"]["threads"] = job["cpt_mid"]-1
-    config["options"]["sam_sort"]["m"] = get_mem(job["cpt_mid"], job["mem_per_cpu"])
+    config["options"]["sam_sort"]["m"] = get_mem(job["cpt_himid"], job["mem_per_cpu"])
     config["options"]["sam_markdup"]["threads"] = job["cpt_mid"]-1
     config["options"]["sam_faidx"]["threads"] = job["cpt_lowmid"]-1
     config["options"]["bcftools_mpileup"]["threads"] = job["cpt_max"]-1

@@ -75,7 +75,7 @@ m = true
 
 [options.sam_sort]
 threads = 5
-m = "19200M"
+m = "29491M"
 output-fmt = 'BAM'
 u = true
 
