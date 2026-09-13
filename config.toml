@@ -76,7 +76,7 @@ m = true
 [options.sam_sort]
 threads = 5
 m = "29491M"
-output-fmt = 'BAM'
+output-fmt = 'SAM'
 u = true
 
 [options.sam_markdup]
