@@ -65,7 +65,7 @@ t = 11
 
 [options.sam_collate]
 threads = 8
-output-fmt = 'BAM'
+output-fmt = 'SAM'
 u = true
 
 [options.sam_fixmate]
