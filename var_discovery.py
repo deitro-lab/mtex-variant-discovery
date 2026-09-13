@@ -176,7 +176,7 @@ def main():
       if len(idx_cmd) == 0:
         logger.info("No reference file for indexing.")
       else:  
-        prlutil.run_serial(idx_cmd)
+        prlutil.run_parallel(idx_cmd, options["workers"])
   else:
     logger.debug("Skipped reference indexing step.")
 

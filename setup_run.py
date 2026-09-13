@@ -18,7 +18,7 @@ def main():
   job = {
     "ntasks": int(os.environ.get("SLURM_NTASKS", 1)),
     "cpt_max": int(os.environ.get("SLURM_CPUS_PER_TASK", 4)),
-    "mem_per_cpu": int(os.environ.get("SLURM_MEM_PER_CPU", "4G")[:-1])
+    "mem_per_cpu": int(os.environ.get("SLURM_MEM_PER_CPU", "4096"))
   }
 
   # Set CPU alloc presets
