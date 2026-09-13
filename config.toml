@@ -92,5 +92,5 @@ threads = 2
 threads = 11
 d = 8000
 ambig-reads = 'drop'
-annotate = '"AD,SD,SP"'
+annotate = '"AD,DP,SP,SCR"'
 output-type = 'v'
