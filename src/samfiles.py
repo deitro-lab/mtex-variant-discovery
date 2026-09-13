@@ -53,6 +53,8 @@ def collate_sam(map_file=None, out_dir=None, temp_dir=None, mode="inout", option
 
   if mode == "inout" or mode == "in":
     cmd += " " + map_file
+  else:
+    cmd += " -"
   if mode == "inout" or mode == "out":
     f_out = os.path.join(out_dir, base_name + ".coll")
     cmd += " " + f_out
@@ -75,6 +77,8 @@ def fixmate_sam(map_file, out_dir=None, temp_dir=".", mode="inout", options=dict
   base_name = os.path.splitext(os.path.basename(map_file))[0] + ".fm"
   if mode == "inout" or mode == "in":
     cmd += " " + map_file
+  else:
+    cmd += " -"
 
   if "O" in options.keys():
     f_out = os.path.join(out_dir, base_name + "." + options["O"].lower())
@@ -120,6 +124,8 @@ def sort_sam(map_file=None, out_dir=None, temp_dir=None, sorting="", mode="inout
       cmd += " -o " + f_out
   if mode == "inout" or mode == "in":
     cmd += " " + map_file
+  else:
+    cmd += " -"
 
   return (cmd, f_out)
 
@@ -139,6 +145,8 @@ def markdup_sam(map_file=None, out_dir=None, temp_dir=None, mode="inout", option
 
   if mode == "inout" or mode == "in":
     cmd += " " + map_file
+  else:
+    cmd += " -"
 
   base_name += ".dedup"
   if "O" in options.keys():
