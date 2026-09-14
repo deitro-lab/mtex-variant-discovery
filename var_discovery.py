@@ -209,7 +209,7 @@ def main():
       for c, i in zip(map_cmd, range(1, len(map_cmd)+1)):
         logger.info("#%s ~ %s", i, c)
     else:
-      prlutil.run_serial(map_cmd)
+      prlutil.run_parallel(map_cmd, options["workers"])
   else:
     logger.debug("Skipped read mapping step.")
 
@@ -235,7 +235,7 @@ def main():
       for c, i in zip(sam_cmd, range(1, len(sam_cmd)+1)):
         logger.info("#%s ~ %s", i, c)
     else:
-      prlutil.run_pipeline(sam_cmd)
+      prlutil.run_parallel(sam_cmd, options["workers"])
   else:
     logger.debug("Skipped SAM file processing step.")
 
@@ -268,7 +268,7 @@ def main():
       for c, i in zip(gen_cmd, range(1, len(gen_cmd)+1)):
         logger.info("#%s ~ %s", i, c)
     else:
-      prlutil.run_serial(gen_cmd) 
+      prlutil.run_parallel(gen_cmd, options["workers"])
   else:
     logger.debug("Skipped variant calling step.")
 

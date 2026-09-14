@@ -221,7 +221,11 @@ def run_parallel(cmd_queue, procs=None):
   with ProcessPoolExecutor(max_workers=procs) as executor:
     process_out = []
     try:
-      futures = executor.map(run_command, cmd_queue)
+      if any(isinstance(c, list) for c in cmd_queue):
+        futures = executor.map(run_pipeline, cmd_queue)
+      else:
+        futures = executor.map(run_command, cmd_queue)
+
       for res in futures:
         if res != None:
           process_out.append(res)
@@ -233,11 +237,21 @@ def run_parallel(cmd_queue, procs=None):
 def run_serial(cmd_queue):
   logger = logging.getLogger(__name__)
   process_out = []
-  for cmd in cmd_queue:
+  
+  if any(isinstance(c, list) for c in cmd_queue):
     try:
-      res = run_command(cmd)
+      res = run_pipeline(cmd_queue)
       if res != None:
         process_out.append(res)
     except Exception as err:
       logger.error("An unexpected error occurred: %s", err)
+  else:
+    for cmd in cmd_queue:
+      try:
+        res = run_command(cmd)
+        if res != None:
+          process_out.append(res)
+      except Exception as err:
+        logger.error("An unexpected error occurred: %s", err)
+
   return process_out
