@@ -138,6 +138,7 @@ dependencies:
   - sqlite=3.46.0=h6d4b2fc_0
   - tiktoken=0.12.0=py312hd04cf1f_3
   - tk=8.6.13=noxft_h4845f30_101
+  - tomlkit=0.15.1=pyhcf101f3_0
   - tqdm=4.67.3=pyh8f84b5b_0
   - typeguard=4.5.1=pyhcf101f3_1
   - typing-extensions=4.15.0=h396c80c_0
@@ -161,7 +162,6 @@ dependencies:
       - aiosignal==1.4.0
       - bioblend==1.9.0
       - click-option-group==0.5.6
-      - galaxy-upload==1.0.1
       - requests-toolbelt==1.0.0
       - tinydb==4.8.2
       - tuspy==1.1.0

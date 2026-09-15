@@ -39,13 +39,9 @@ This workflow was developed for batched processing of Illumina short reads.
 
 # Getting Started
 1. Setup [conda](https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html) (recommended: Miniforge - [Github](https://github.com/conda-forge/miniforge) | [Download](https://conda-forge.org/download/)) in your machine
-2. Create a conda virtual environment from the `requirements.txt` file
+2. Create a conda virtual environment with relevant packages from the `environment.yml` file
 ```shell
-conda create --new <ENV_NAME> --file requirements.txt
-```
-*Alternative*: install packages from `requirements.txt` file in existing virtual env
-```shell
-conda install --file requirements.txt
+conda create --file environment.yml
 ```
 3. Set new environment as the active virtual env
 ```shell
@@ -84,6 +80,39 @@ python var_discovery.py [-h] [-c CONFIG] [options...]
 
 # Help
 -h, --help             Print program help
+```
+
+## SLURM
+The program can be used in a SLURM environment with an accompanying script (`setup_run.py`) for automatically adjusting the config based on the run parameters.
+
+Example `sbatch` script:
+
+```shell
+#!/bin/bash
+
+#SBATCH --job-name=vardis
+#SBATCH --partition=batch
+#SBATCH --qos=batch_default
+#SBATCH --nodes=1
+#SBATCH --ntasks=2
+#SBATCH --ntasks-per-node=2
+#SBATCH --cpus-per-task=12
+#SBATCH --mem-per-cpu=4G
+#SBATCH --output="./logs/%x.%j.out"
+#SBATCH --requeue
+
+ulimit -s unlimited
+
+## Reset modules
+module purge
+module load anaconda/3-2024.10-1
+conda activate vdenv
+
+## Workflow
+set -euo pipefail
+. normalize_refs.sh
+python setup_run.py
+python var_discovery.py
 ```
 
 # Configuration
