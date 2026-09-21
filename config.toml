@@ -70,7 +70,7 @@ u = true
 
 [options.sam_fixmate]
 threads = 5
-output-fmt = 'BAM'
+output-fmt = 'SAM'
 m = true
 
 [options.sam_sort]
@@ -93,4 +93,4 @@ threads = 11
 d = 8000
 ambig-reads = 'drop'
 annotate = '"AD,DP,SP,SCR"'
-output-type = 'v'
+output-type = 'z4'

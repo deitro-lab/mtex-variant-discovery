@@ -80,15 +80,20 @@ def fixmate_sam(map_file, out_dir=None, temp_dir=".", mode="inout", options=dict
   else:
     cmd += " -"
 
-  if "O" in options.keys():
-    f_out = os.path.join(out_dir, base_name + "." + options["O"].lower())
+  if mode == "inout" or mode == "out":
+    f_out = os.path.join(out_dir, base_name + ".coll")
     cmd += " " + f_out
-  elif "output-fmt" in options.keys():
-    f_out = os.path.join(out_dir, base_name + "." + options["output-fmt"].lower())
-    cmd += " " + f_out
+    if "O" in options.keys():
+      f_out = os.path.join(out_dir, base_name + "." + options["O"].lower())
+      cmd += " " + f_out
+    elif "output-fmt" in options.keys():
+      f_out = os.path.join(out_dir, base_name + "." + options["output-fmt"].lower())
+      cmd += " " + f_out
+    else:
+      f_out = os.path.join(out_dir, base_name + ".bam")
+      cmd += " " + f_out
   else:
-    f_out = os.path.join(out_dir, base_name + ".bam")
-    cmd += " " + f_out
+    cmd += " -"
 
   return (cmd, f_out)
 
@@ -122,6 +127,7 @@ def sort_sam(map_file=None, out_dir=None, temp_dir=None, sorting="", mode="inout
     else:
       f_out = os.path.join(out_dir, base_name + ".bam")
       cmd += " -o " + f_out
+
   if mode == "inout" or mode == "in":
     cmd += " " + map_file
   else:
@@ -149,15 +155,18 @@ def markdup_sam(map_file=None, out_dir=None, temp_dir=None, mode="inout", option
     cmd += " -"
 
   base_name += ".dedup"
-  if "O" in options.keys():
-    f_out = os.path.join(out_dir, base_name + "." + options["O"].lower())
-    cmd += " " + f_out
-  elif "output-fmt" in options.keys():
-    f_out = os.path.join(out_dir, base_name + "." + options["output-fmt"].lower())
-    cmd += " " + f_out
+  if mode == "inout" or mode == "out":
+    if "O" in options.keys():
+      f_out = os.path.join(out_dir, base_name + "." + options["O"].lower())
+      cmd += " " + f_out
+    elif "output-fmt" in options.keys():
+      f_out = os.path.join(out_dir, base_name + "." + options["output-fmt"].lower())
+      cmd += " " + f_out
+    else:
+      f_out = os.path.join(out_dir, base_name + ".bam")
+      cmd += " " + f_out
   else:
-    f_out = os.path.join(out_dir, base_name + ".bam")
-    cmd += " " + f_out
+    cmd += " -"
     
   return (cmd, f_out)
 
@@ -244,7 +253,7 @@ def dedup_files(files, in_dir, out_dir, temp_dir, opt_set):
     sort_cmd = sort_sam(
       map_file=fm_cmd[1],
       temp_dir=temp_dir,
-      mode="in",
+      mode="pipe",
       options=opt_set["sort"]
     )[0]
     cmd_set.append(fm_cmd[0] + " && " + sort_cmd)
