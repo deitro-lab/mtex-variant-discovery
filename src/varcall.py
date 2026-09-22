@@ -9,7 +9,7 @@ def bcft_mpileup(in_dir, flag="", out_dir=None, ref=None, options=dict()):
   logger = logging.getLogger(__name__)
   alext = (".sam", ".bam", ".cram")
   flag_filter = tuple(flag + e for e in alext)
-  vcext = {"b": ".BCF", "u": ".BCF", "z": ".VCF", "v": ".VCF"}
+  vcext = {"b": ".bcf", "u": ".bcf", "z": ".vcf", "v": ".vcf"}
 
   if not os.path.isdir(in_dir):
     logger.error("Specified input directory not found.")
@@ -27,6 +27,16 @@ def bcft_mpileup(in_dir, flag="", out_dir=None, ref=None, options=dict()):
 
   processed = set()
 
+  if "O" in options.keys():
+    otype = " -O " + options["O"]
+    ext = vcext[options.pop("O", None)]
+  elif "output-type" in options.keys():
+    otype = " --output-type " + options["output-type"]
+    ext = vcext[options.pop("output-type", None)[0]]
+  else:
+    otype = " -O z"
+    ext = ".VCF"
+
   for file in prlutil.filter_files(in_dir, flag_filter):
     path = os.path.join(in_dir, file)
 
@@ -35,16 +45,7 @@ def bcft_mpileup(in_dir, flag="", out_dir=None, ref=None, options=dict()):
 
     processed.add(path)
 
-    cmd = "bcftools mpileup"
-
-    if "O" in options.keys():
-      cmd += " -O " + options["O"]
-      ext = vcext[options.pop("0", None)]
-    elif "output-type" in options.keys():
-      cmd += " --output-type " + options["output-type"]
-      ext = vcext[options.pop("output-type", None)[0]]
-    else:
-      ext = ".VCF"
+    cmd = f"bcftools mpileup{otype}"
 
     for opt in prlutil.to_optstring(options):
       cmd += " " + opt
