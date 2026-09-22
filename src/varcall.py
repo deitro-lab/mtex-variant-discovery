@@ -38,8 +38,10 @@ def bcft_mpileup(in_dir, flag="", out_dir=None, ref=None, options=dict()):
     cmd = "bcftools mpileup"
 
     if "O" in options.keys():
+      cmd += " -O " + options["O"]
       ext = vcext[options.pop("0", None)]
     elif "output-type" in options.keys():
+      cmd += " --output-type " + options["output-type"]
       ext = vcext[options.pop("output-type", None)[0]]
     else:
       ext = ".VCF"

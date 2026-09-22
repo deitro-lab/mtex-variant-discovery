@@ -226,7 +226,6 @@ def dedup_files(files, in_dir, out_dir, temp_dir, opt_set):
   processed = set()
 
   for f in files:
-    cmd_set = []
     path = os.path.join(in_dir, f)
 
     if prlutil.strip_ext(f, alext).endswith(flags):
@@ -236,34 +235,34 @@ def dedup_files(files, in_dir, out_dir, temp_dir, opt_set):
 
     processed.add(path)
 
-    cmd_set.append(collate_sam(
+    cmd_pipe = collate_sam(
       map_file=path,
       out_dir=out_dir,
       temp_dir=temp_dir,
       mode="in",
       options=opt_set["collate"]
-    )[0])
+    )[0]
     fm_cmd = fixmate_sam(
       map_file=path,
       out_dir=out_dir,
       temp_dir=temp_dir,
       mode="pipe",
       options=opt_set["fixmate"]
-    )
+    )[0]
     sort_cmd = sort_sam(
       map_file=fm_cmd[1],
       temp_dir=temp_dir,
       mode="pipe",
       options=opt_set["sort"]
     )[0]
-    cmd_set.append(fm_cmd[0] + " | " + sort_cmd)
-    cmd_set.append(markdup_sam(
+    cmd_pipe += " | " + fm_cmd + " | " + sort_cmd
+    cmd_pipe += " | " + markdup_sam(
       map_file=path,
       out_dir=out_dir,
       temp_dir=temp_dir,
       mode="out",
       options=opt_set["markdup"]
-    )[0])
+    )[0]
 
-    commands.append(cmd_set)
+    commands.append(cmd_pipe)
   return commands
