@@ -40,7 +40,7 @@ def bcft_mpileup(in_dir, flag="", out_dir=None, ref=None, options=dict()):
     if "O" in options.keys():
       ext = vcext[options.pop("0", None)]
     elif "output-type" in options.keys():
-      ext = vcext[options.pop("output-type", None)]
+      ext = vcext[options.pop("output-type", None)[0]]
     else:
       ext = ".VCF"
 

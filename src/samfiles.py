@@ -256,7 +256,7 @@ def dedup_files(files, in_dir, out_dir, temp_dir, opt_set):
       mode="pipe",
       options=opt_set["sort"]
     )[0]
-    cmd_set.append(fm_cmd[0] + " && " + sort_cmd)
+    cmd_set.append(fm_cmd[0] + " | " + sort_cmd)
     cmd_set.append(markdup_sam(
       map_file=path,
       out_dir=out_dir,
