@@ -120,7 +120,7 @@ def main():
     dir_list["rep_dir"] = "./output"
 
   if "workers" not in options.keys():
-    options["workers"] = 4
+    options["workers"] = 1
 
   prlutil.init_project(dir_list.values())
 

@@ -94,3 +94,10 @@ d = 8000
 ambig-reads = 'drop'
 annotate = '"AD,DP,SP,SCR"'
 output-type = 'z4'
+
+# Reference analysis
+[input.busco]
+lineages = ['embryophyta_odb12.2026-05-22.tar.gz', 'liliopsida_odb12.2026-05-22.tar.gz']
+
+[options.busco]
+c = 2
