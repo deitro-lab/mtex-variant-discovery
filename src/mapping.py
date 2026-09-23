@@ -93,7 +93,7 @@ def map_reads(paired_coll, in_dir, ref=None, out_dir=None, aligner="bwa-mem2", i
 
     if aligner == "bwa-mem2" or aligner == "minibwa":
       if is_compress:
-        cmd += f" {ref} {r1} {r2} > samtools view -b -o {os.path.join(out_dir, base_name + '.bam')}"
+        cmd += f" {ref} {r1} {r2} | samtools view -b -o {os.path.join(out_dir, base_name + '.bam')}"
       else:
         cmd += f" {ref} {r1} {r2} > {os.path.join(out_dir, base_name + '.sam')}"
     
