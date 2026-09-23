@@ -46,7 +46,7 @@ def index_refs(aligner="bwa-mem2", ref_dir=".", options=dict()):
 
   return commands
 
-def map_reads(paired_coll, in_dir, ref=None, out_dir=None, aligner="bwa-mem2", options=dict()):
+def map_reads(paired_coll, in_dir, ref=None, out_dir=None, aligner="bwa-mem2", is_compress=False, options=dict()):
   logger = logging.getLogger(__name__)
   faext = (".fasta", ".fa", ".fna", ".fas")
 
@@ -92,7 +92,10 @@ def map_reads(paired_coll, in_dir, ref=None, out_dir=None, aligner="bwa-mem2", o
       cmd += " " + opt
 
     if aligner == "bwa-mem2" or aligner == "minibwa":
-      cmd += f" {ref} {r1} {r2} > {os.path.join(out_dir, base_name + '.sam')}"
+      if is_compress:
+        cmd += f" {ref} {r1} {r2} > samtools view -b -o {os.path.join(out_dir, base_name + '.bam')}"
+      else:
+        cmd += f" {ref} {r1} {r2} > {os.path.join(out_dir, base_name + '.sam')}"
     
     commands.append(cmd)
 

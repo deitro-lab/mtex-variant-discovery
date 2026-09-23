@@ -26,13 +26,14 @@ def parse_options():
     description="A script for batched processing of short-read FASTQ data from preprocessing to variant calling"
   )
   parser.add_argument("-c", "--config", default="./config.toml", help="Path to config file")
-  parser.add_argument("-r", "--is-dryrun", action="store_true", help="Only perform dry run of steps (commands generated but not executed)")
+  parser.add_argument("-r", "--dryrun", action="store_true", help="Only perform dry run of steps (commands generated but not executed)")
   parser.add_argument("-p", "--no-preprocess", action="store_true", help="Disable preprocessing step")
   parser.add_argument("-i", "--no-index", action="store_true", help="Disable reference indexing step")
   parser.add_argument("-m", "--no-map", action="store_true", help="Disable read mapping step")
   parser.add_argument("-d", "--no-dedup", action="store_true", help="Disable sorting & deduplication of alignment files")
   parser.add_argument("-g", "--no-genotyping", action="store_true", help="Disable estimation of genotype likelihoods")
   parser.add_argument("--aligner", default="bwa-mem2", help="Specify alignment tool (bwa-mem2/minibwa)")
+  parser.add_argument("-z", "--compress", action="store_true", help="Enable compression for output files")
   parser.add_argument("-l", "--log", type=str, default="dc", help="Configure logging [c: console, d: time-specific files, s: single file]")
   parser.add_argument("-q", "--quiet", action="store_true", help="Disable logging")
 
@@ -103,6 +104,7 @@ def main():
     logger.critical("Unable to find valid config file at '%s'. Terminating program...", config_dir)
     sys.exit(1)
 
+  # Setup directories in config
   if "in_dir" not in dir_list:
     logger.warning("No input directory specified in config.")
     dir_list["in_dir"] = "."
@@ -123,6 +125,11 @@ def main():
     options["workers"] = 1
 
   prlutil.init_project(dir_list.values())
+
+  # Setup compression in config
+  if run_args.compress:
+    options["options"]["sam_markdup"].update({"output-fmt": "BAM"})
+    options["options"]["bcftools_mpileup"].update({"output-type": "b7"})
 
   step = 1
 
@@ -146,7 +153,7 @@ def main():
 
     logger.info("[%s] Performing preprocessing...", step)
     step += 1
-    if run_args.is_dryrun:
+    if run_args.dryrun:
       for c, i in zip(fastp_cmd, range(1, len(fastp_cmd)+1)):
         logger.info("#%s ~ %s", i, c)
     else:
@@ -169,7 +176,7 @@ def main():
 
     logger.info("[%s] Performing reference indexing...", step)
     step += 1
-    if run_args.is_dryrun:
+    if run_args.dryrun:
       for c, i in zip(idx_cmd, range(1, len(idx_cmd)+1)):
         logger.info("#%s ~ %s", i, c)
     else:
@@ -200,12 +207,13 @@ def main():
       ref=os.path.join(dir_list["ref_dir"], options["input"]["bwa_mem"]["ref"]),
       out_dir=dir_list["out_dir"],
       aligner=run_args.aligner,
+      is_compress=run_args.compress,
       options=map_opt
     )
 
     logger.info("[%s] Performing read mapping...", step)
     step += 1
-    if run_args.is_dryrun:
+    if run_args.dryrun:
       for c, i in zip(map_cmd, range(1, len(map_cmd)+1)):
         logger.info("#%s ~ %s", i, c)
     else:
@@ -231,7 +239,7 @@ def main():
 
     logger.info("[%s] Performing SAM file processing...", step)
     step += 1
-    if run_args.is_dryrun:
+    if run_args.dryrun:
       for c, i in zip(sam_cmd, range(1, len(sam_cmd)+1)):
         logger.info("#%s ~ %s", i, c)
     else:
@@ -248,7 +256,7 @@ def main():
 
     logger.info("[%s] Performing reference indexing...", step)
     step += 1
-    if run_args.is_dryrun:
+    if run_args.dryrun:
       for c, i in zip(fai_cmd, range(1, len(fai_cmd)+1)):
         logger.info("#%s ~ %s", i, c)
     else:
@@ -264,7 +272,7 @@ def main():
 
     logger.info("[%s] Generating genotype likelihoods...", step)
     step += 1
-    if run_args.is_dryrun:
+    if run_args.dryrun:
       for c, i in zip(gen_cmd, range(1, len(gen_cmd)+1)):
         logger.info("#%s ~ %s", i, c)
     else:
