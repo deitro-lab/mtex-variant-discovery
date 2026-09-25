@@ -38,14 +38,14 @@ read2_flag = '_2'
 read_flags = ['_1', '_2']
 
 [input.bwa_mem]
-ref = 'Mtex-Abuab_RBK.norm.fa'
+ref = 'ref_genome.norm.fa'
 prep_ext = '.clean.fastq.gz'
 
 [input.samtools]
 mode = "pipe"
 
 [input.bcftools_mpileup]
-ref = 'Mtex-Abuab_RBK.norm.fa'
+ref = 'ref_genome.norm.fa'
 flag = ".dedup"
 
 [options.fastp]
@@ -93,7 +93,7 @@ threads = 11
 d = 8000
 ambig-reads = 'drop'
 annotate = '"AD,DP,SP,SCR"'
-output-type = 'z4'
+output-type = 'b7'
 
 # Reference analysis
 [input.busco]
