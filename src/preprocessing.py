@@ -6,12 +6,7 @@ import os
 
 from .utils import log, to_optstring
 
-def prep_read(paired_coll, in_dir, flag = "clean", out_dir=None, rep_dir=None, options=dict()):
-  if in_dir == None:
-    raise ValueError
-  if not os.path.isdir(in_dir):
-    log.error("Specified input directory not found.")
-    raise ValueError
+def prep_read(paired_coll, flag = "clean", out_dir=None, rep_dir=None, options=dict()):
   if not os.path.isdir(out_dir):
     log.error("Specified output directory not found.")
     raise ValueError
@@ -23,13 +18,13 @@ def prep_read(paired_coll, in_dir, flag = "clean", out_dir=None, rep_dir=None, o
     raise ValueError
   
   if out_dir == None:
-    out_dir = in_dir
+    out_dir = "."
   if rep_dir == None:
     rep_dir = out_dir
 
-  r1_in, r2_in = paired_coll.get_reads()
-  r1_out, r2_out = paired_coll.append_flags(flag)
-  cmd = f"fastp -i {os.path.join(in_dir, r1_in)} -I {os.path.join(in_dir, r2_in)} -o {os.path.join(in_dir, r1_out)} -O {os.path.join(in_dir, r2_out)}"
+  r1_in, r2_in = paired_coll.get_paths()
+  r1_out, r2_out = paired_coll.append_flags(flag, path = out_dir)
+  cmd = f"fastp -i {r1_in} -I {r2_in} -o {r1_out} -O {r2_out}"
   for opt in to_optstring(options):
     cmd += " " + opt
   cmd += f" --html {os.path.join(rep_dir, paired_coll.base.name + '.html')} --json {os.path.join(rep_dir, paired_coll.base.name + '.json')}"

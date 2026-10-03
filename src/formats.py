@@ -12,17 +12,19 @@ EXT_VCF = (".vcf", ".bcf")
 class SeqFile:
   name: str
   ext: str
+  dir: str
   format: str
   flags: tuple[str] = ()
   is_zip: bool = False
 
-  def __init__(self, fpath):
+  def __init__(self, dir, fpath):
     ext_map = {
       "fq": EXT_FQ, "fa": EXT_FA,
       "sam": EXT_SAM, "vcf": EXT_VCF
     }
 
     tokens = fpath.split(".")
+    self.dir = dir
     self.name = tokens[0]
     if tokens[-1] == "gz":
       self.ext = "." + tokens[-2] + ".gz"
@@ -62,6 +64,9 @@ class SeqFile:
     else:
       return self.name + sep + affix[0] + self.ext
 
+  def get_path(self):
+    return os.path.join(self.dir, str(self))
+
 @dataclass
 class PairedCollection:
   base: SeqFile
@@ -96,10 +101,14 @@ class PairedCollection:
     else:
       return None
 
-  def append_flags(self, flags, sep = "."):
-    r1 = self.base.name + self.flags[0] + sep + ".".join([*self.base.flags, flags]) + self.base.ext
-    r2 = self.base.name + self.flags[1] + sep + ".".join([*self.base.flags, flags]) + self.base.ext
+  def append_flags(self, flags, sep = ".", path = ""):
+    r1 = os.path.join(path, self.base.name + self.flags[0] + sep + ".".join([*self.base.flags, flags]) + self.base.ext)
+    r2 = os.path.join(path, self.base.name + self.flags[1] + sep + ".".join([*self.base.flags, flags]) + self.base.ext)
     return (r1, r2)
+
+  def get_paths(self):
+    r1, r2 = self.get_reads()
+    return (os.path.join(self.base.dir, r1), os.path.join(self.base.dir, r2))
 
 def filter_files(dir, ext, check_zip = True):
   if not os.path.exists(dir):
@@ -132,7 +141,7 @@ def get_paired_reads(dir, flags, suffix = ""):
 
   paired_reads = []
   for r in base_reads:
-    read = PairedCollection(SeqFile(r), flags)
+    read = PairedCollection(SeqFile(dir, r), flags)
     mate = os.path.join(dir, read.get_reads(2))
 
     if os.path.exists(mate):
