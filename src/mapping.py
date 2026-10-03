@@ -1,11 +1,7 @@
-#!/usr/bin/env python
+import os.path as op
+from .utils import log, to_optstring
 
-import logging
-import os
-
-import src.utilities as prlutil
-
-def is_indexed(aligner, path):
+def is_indexed(path, aligner):
   if aligner == "bwa-mem2":
     idxext = (".0123", ".amb", ".ann", ".bwt.2bit.64", ".pac")
   elif aligner == "minibwa":
@@ -14,89 +10,51 @@ def is_indexed(aligner, path):
     idxext = ()
 
   for ext in idxext:
-    if not os.path.exists(path + ext):
+    if not op.exists(path + ext):
       return False
 
   return True
 
-def index_refs(aligner="bwa-mem2", ref_dir=".", options=dict()):
-  faext = (".fasta", ".fa", ".fna", ".fas")
-  commands = []
+def index_ref(ref, aligner = "bwa-mem2", options=dict()):
+  if aligner == "bwa-mem2":
+    cmd = f"bwa-mem2 index"
+  elif aligner == "minibwa":
+    cmd = "minibwa index"
 
-  processed = set() 
+  for opt in to_optstring(options):
+    cmd += " " + opt
+  cmd += " " + ref.get_path()
 
-  for file in prlutil.filter_files(ref_dir, faext):
-    path = os.path.join(ref_dir, file)
+  return cmd
 
-    if is_indexed(aligner, path):
-      continue
-
-    processed.add(path)
-
-    if aligner == "bwa-mem2":
-      cmd = f"bwa-mem2 index {path}"
-    elif aligner == "minibwa":
-      cmd = "minibwa index"
-
-    for opt in prlutil.to_optstring(options):
-      cmd += " " + opt
-    cmd += " " + path
-
-    commands.append(cmd)
-
-  return commands
-
-def map_reads(paired_coll, in_dir, ref=None, out_dir=None, aligner="bwa-mem2", is_compress=False, options=dict()):
-  logger = logging.getLogger(__name__)
-  faext = (".fasta", ".fa", ".fna", ".fas")
-
-  if in_dir == None or out_dir == None or ref == None:
-    logger.error("One or more directory arg missing.")
+def map_read(paired_coll, ref, out_dir = None, aligner = "bwa-mem2", is_compress = False, options = dict()):
+  if out_dir == None:
+    log.warning("No output directory specified.")
+    out_dir = "."
+  if not op.isdir(out_dir):
+    log.error("Specified output directory not found.")
     raise ValueError
-  if not os.path.isdir(in_dir):
-    logger.error("Specified input directory not found.")
+  if paired_coll.base.format != "fq" or ref.format != "fa":
+    log.error("Invalid file type(s) detected.")
     raise ValueError
-  if not os.path.isdir(out_dir):
-    logger.error("Specified output directory not found.")
-    raise ValueError
-  if not os.path.exists(ref):
-    logger.error("Specified reference file not found.")
-    raise ValueError
-  if set(paired_coll["ext"]) <= set(faext):
-    logger.error("Invalid file type(s) detected.")
-    raise ValueError
-  if not is_indexed(aligner, ref):
-    logger.error("Missing index files.")
+  if not is_indexed(ref.get_path(), aligner):
+    log.error("Missing index file(s). Perform reference indexing first.")
     raise ValueError
 
-  commands = []
+  if aligner == "bwa-mem2":
+    cmd = "bwa-mem2 mem"
+  elif aligner == "minibwa":
+    cmd = "minibwa map"
+  else:
+    cmd = None
+  for opt in to_optstring(options):
+    cmd += " " + opt
 
-  processed = set()
-  
-  for base_name, read_pair in zip(paired_coll["items"], prlutil.get_files_from_coll(paired_coll)):
-    r1 = os.path.join(in_dir, read_pair[0])
-    r2 = os.path.join(in_dir, read_pair[1])
-    if not os.path.exists(r1) or not os.path.exists(r2):
-      continue
-    if processed >= set(read_pair):
-      continue
+  r1_in, r2_in = paired_coll.get_paths()
+  if aligner == "bwa-mem2" or aligner == "minibwa":
+    if is_compress:
+      cmd += f" {ref.get_path()} {r1_in} {r2_in} | samtools view -b -o {op.join(out_dir, paired_coll.base.name + '.bam')}"
+    else:
+      cmd += f" {ref.get_path()} {r1_in} {r2_in} > {op.join(out_dir, paired_coll.base.name + '.sam')}"
 
-    processed.update(read_pair)
-
-    if aligner == "bwa-mem2":
-      cmd = "bwa-mem2 mem"
-    elif aligner == "minibwa":
-      cmd = "minibwa map"
-
-    for opt in prlutil.to_optstring(options):
-      cmd += " " + opt
-
-    if aligner == "bwa-mem2" or aligner == "minibwa":
-      if is_compress:
-        cmd += f" {ref} {r1} {r2} | samtools view -b -o {os.path.join(out_dir, base_name + '.bam')}"
-      else:
-        cmd += f" {ref} {r1} {r2} > {os.path.join(out_dir, base_name + '.sam')}"
-    
-    commands.append(cmd)
-
-  return commands
+  return cmd
