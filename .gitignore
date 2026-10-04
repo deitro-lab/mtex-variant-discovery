@@ -16,6 +16,7 @@ output/
 reads/
 refs/
 tmp/
+test/
 
 # Local
 .archive/
