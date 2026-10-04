@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-import argparse
 import copy
 from datetime import timedelta
 import logging
@@ -8,123 +7,69 @@ import os
 import sys
 import time
 
-import src.utilities as prlutil
-import src.preprocessing as prlprep
-import src.mapping as prlmap
-import src.samfiles as prlsam
-import src.varcall as prlvar
+from src.base import parse_options, parse_config, init_project
+from src.utils import log, LOG_FORMAT
+from src.worker import run_parallel
+from src.workflows import batch_preprocess, batch_index, batch_map, batch_dedup, batch_genotype
 
-TOOL_NAME = "AbacaVD"
-VARDIS_VERSION = "0.1"
 LOG_DIR = "./logs/"
 
-def parse_options():
-  logger = logging.getLogger(__name__)
-  parser = argparse.ArgumentParser(
-    prog=TOOL_NAME,
-    usage="python var_discovery.py [-h] [-c CONFIG] [options...]",
-    description="A script for batched processing of short-read FASTQ data from preprocessing to variant calling"
-  )
-  parser.add_argument("-c", "--config", default="./config.toml", help="Path to config file")
-  parser.add_argument("-r", "--dryrun", action="store_true", help="Only perform dry run of steps (commands generated but not executed)")
-  parser.add_argument("-p", "--no-preprocess", action="store_true", help="Disable preprocessing step")
-  parser.add_argument("-i", "--no-index", action="store_true", help="Disable reference indexing step")
-  parser.add_argument("-m", "--no-map", action="store_true", help="Disable read mapping step")
-  parser.add_argument("-d", "--no-dedup", action="store_true", help="Disable sorting & deduplication of alignment files")
-  parser.add_argument("-g", "--no-genotyping", action="store_true", help="Disable estimation of genotype likelihoods")
-  parser.add_argument("--aligner", default="bwa-mem2", help="Specify alignment tool (bwa-mem2/minibwa)")
-  parser.add_argument("-z", "--compress", action="store_true", help="Enable compression for output files")
-  parser.add_argument("-l", "--log", type=str, default="dc", help="Configure logging [c: console, d: time-specific files, s: single file]")
-  parser.add_argument("-q", "--quiet", action="store_true", help="Disable logging")
-
-  try:
-    args = parser.parse_args()
-  except argparse.ArgumentError as err:
-    logger.error("Unable to parse provided args: %s", err.message)
-    return err
-  except Exception as err:
-    logger.error("An unexpected error occurred: %s", err)
-    return err
-
-  return args
-  
-def main():
-  logging.basicConfig(
-    level=logging.DEBUG,
-    handlers=[]
-  )
-  logger = logging.getLogger()
-  logger.propagate = False
-  logform = logging.Formatter(
-    fmt="[%(asctime)s] %(levelname)s: %(message)s",
-    datefmt="%Y-%m-%d %H:%M:%S"
-  )
-      
-  time_start = time.perf_counter()
-
-  try:
-    run_args = parse_options()
-  except Exception:
-    print("Unable to process args. Terminating program...")
-    sys.exit(1)
-
+def setup_logging(log_config, is_quiet):
   if not os.path.isdir(LOG_DIR):
     os.mkdir(LOG_DIR)
 
-  if run_args.quiet:
-    run_args.log = ""
-  if run_args.log.find("d") != -1:
+  if log_config.find("c") == -1:
+    log.removeHandler(log.handlers[0])
+  if log_config.find("d") != -1:
     log_name = os.path.join(LOG_DIR, time.strftime("%y%m%d%H%M%S") + ".log")
-    logfile_handler = logging.FileHandler(log_name, "a", "utf-8")
-    logfile_handler.setLevel("DEBUG")
-    logfile_handler.setFormatter(logform)
-    logger.addHandler(logfile_handler)
-  elif run_args.log.find("s") != -1:
+    logfile = logging.FileHandler(log_name, "a", "utf-8")
+    logfile.setLevel("DEBUG")
+    logfile.setFormatter(LOG_FORMAT)
+    log.addHandler(logfile)
+  elif log_config.find("s") != -1:
     log_name = os.path.join(LOG_DIR, f"{os.path.basename(__file__)[:-3]}.log")
-    logfile_handler = logging.FileHandler(log_name, "a", "utf-8")
-    logfile_handler.setLevel("DEBUG")
-    logfile_handler.setFormatter(logform)
-    logger.addHandler(logfile_handler)
-  if run_args.log.find("c") != -1:
-    console_handler = logging.StreamHandler()
-    console_handler.setLevel("INFO")
-    console_handler.setFormatter(logform)
-    logger.addHandler(console_handler)
-  if {"d","s","c"}.isdisjoint(set(run_args.log)):
+    logfile = logging.FileHandler(log_name, "a", "utf-8")
+    logfile.setLevel("DEBUG")
+    logfile.setFormatter(LOG_FORMAT)
+    log.addHandler(logfile)
+  if {"d","s","c"}.isdisjoint(set(log_config)) or is_quiet:
     logging.disable()
-  
-  logging.info("Run started at %s", time_start)
-  logging.debug("Current run parameters: %s", str(run_args.__dict__))
-  
-  config_dir = run_args.config
-  if os.path.exists(config_dir):
-    options = prlutil.parse_config(config_dir) 
-    dir_list = options.pop('directories')
-  else:
-    logger.critical("Unable to find valid config file at '%s'. Terminating program...", config_dir)
-    sys.exit(1)
 
-  # Setup directories in config
+def check_dirs(dir_list):
   if "in_dir" not in dir_list:
-    logger.warning("No input directory specified in config.")
+    log.warning("No input directory specified in config.")
     dir_list["in_dir"] = "."
   if "out_dir" not in dir_list:
-    logger.warning("No output directory specified in config.")
+    log.warning("No output directory specified in config.")
     dir_list["out_dir"] = "./output"
   if "ref_dir" not in dir_list:
-    logger.warning("No reference directory specified in config.")
+    log.warning("No reference directory specified in config.")
     dir_list["ref_dir"] = "."
   if "tmp_dir" not in dir_list:
-    logger.warning("No temporary files directory specified in config.")
+    log.warning("No temporary files directory specified in config.")
     dir_list["tmp_dir"] = "./tmp"
   if "rep_dir" not in dir_list:
-    logger.warning("No report directory specified in config.")
+    log.warning("No report directory specified in config.")
     dir_list["rep_dir"] = "./output"
 
+  return dir_list
+
+def process_project(run_args):
+  log.debug("Current run parameters: %s", str(run_args.__dict__))
+
+  # Parse TOML config file
+  config_dir = run_args.config
+  if os.path.exists(config_dir):
+    options = parse_config(config_dir) 
+    dir_list = check_dirs(options.pop('directories'))
+  else:
+    log.critical("Unable to find valid config file at '%s'. Terminating program...", config_dir)
+    sys.exit(1)
+
+  # Initialize project
   if "workers" not in options.keys():
     options["workers"] = 1
-
-  prlutil.init_project(dir_list.values())
+  init_project(dir_list.values())
 
   # Setup compression in config
   if run_args.compress:
@@ -135,154 +80,147 @@ def main():
 
   # Step 1: preprocessing
   if not run_args.no_preprocess:
-    read_pc = prlutil.make_paired_coll(
-      dir=dir_list["in_dir"],
-      ext=".fastq.gz",
-      affix="suffix",
-      flags=options["input"]["fastp"]["read_flags"]
-    )
-
-    fastp_cmd = prlprep.prep_reads(
-      paired_coll=read_pc,
+    log.info("[%s] Performing preprocessing...", step)
+    fastp_cmd = batch_preprocess(
       in_dir=dir_list["in_dir"],
+      in_flags=options["flags"]["pair"],
+      out_flag=options["flags"]["fastp"],
       out_dir=dir_list["out_dir"],
-      out_flag=".clean",
       rep_dir=dir_list["rep_dir"],
       options=copy.copy(options["options"]["fastp"])
     )
 
-    logger.info("[%s] Performing preprocessing...", step)
     step += 1
     if run_args.dryrun:
       for c, i in zip(fastp_cmd, range(1, len(fastp_cmd)+1)):
-        logger.info("#%s ~ %s", i, c)
+        log.info("#%s ~ %s", i, c)
     else:
-      prlutil.run_parallel(fastp_cmd, options["workers"])
+      run_parallel(fastp_cmd, options["workers"])
   else:
-    logger.debug("Skipped preprocessing step.")
+    log.debug("Skipped preprocessing step.")
 
   # Step 2.1: Reference indexing
   if not run_args.no_index:
+    log.info("[%s] Performing reference indexing...", step)
     if run_args.aligner == "bwa-mem2":
       idx_opt = dict()
     elif run_args.aligner == "minibwa":
       idx_opt = copy.copy(options["options"]["minibwa_index"])
 
-    idx_cmd = prlmap.index_refs(
-      aligner=run_args.aligner,
+    idx_cmd = batch_index(
       ref_dir=dir_list["ref_dir"],
+      aligner=run_args.aligner,
       options=idx_opt
     )
-
-    logger.info("[%s] Performing reference indexing...", step)
+    
     step += 1
     if run_args.dryrun:
       for c, i in zip(idx_cmd, range(1, len(idx_cmd)+1)):
-        logger.info("#%s ~ %s", i, c)
+        log.info("#%s ~ %s", i, c)
     else:
       if len(idx_cmd) == 0:
-        logger.info("No reference file for indexing.")
+        log.info("No reference file for indexing.")
       else:  
-        prlutil.run_parallel(idx_cmd, options["workers"])
+        run_parallel(idx_cmd, options["workers"])
   else:
-    logger.debug("Skipped reference indexing step.")
+    log.debug("Skipped reference indexing step.")
 
   # Step 2.2: Read mapping
   if not run_args.no_map:
+    log.info("[%s] Performing read mapping...", step)
     if run_args.aligner == "bwa-mem2":
       map_opt = copy.copy(options["options"]["bwamem2_mem"])
     elif run_args.aligner == "minibwa":
       map_opt = copy.copy(options["options"]["minibwa_map"])
 
-    clean_pc = prlutil.make_paired_coll(
-      dir=dir_list["out_dir"],
-      ext=".clean.fastq.gz",
-      affix="suffix",
-      flags=options["input"]["fastp"]["read_flags"]
-    )
-
-    map_cmd = prlmap.map_reads(
-      paired_coll=clean_pc,
+    map_cmd = batch_map(
       in_dir=dir_list["out_dir"],
-      ref=os.path.join(dir_list["ref_dir"], options["input"]["bwa_mem"]["ref"]),
+      ref_path=os.path.join(dir_list["ref_dir"], options["input"]["main_ref"]),
+      in_flags=options["flags"]["pair"],
+      prep_flag=options["flags"]["fastp"],
       out_dir=dir_list["out_dir"],
       aligner=run_args.aligner,
       is_compress=run_args.compress,
       options=map_opt
     )
-
-    logger.info("[%s] Performing read mapping...", step)
+    
     step += 1
     if run_args.dryrun:
       for c, i in zip(map_cmd, range(1, len(map_cmd)+1)):
-        logger.info("#%s ~ %s", i, c)
+        log.info("#%s ~ %s", i, c)
     else:
-      prlutil.run_parallel(map_cmd, options["workers"])
+      run_parallel(map_cmd, options["workers"])
   else:
-    logger.debug("Skipped read mapping step.")
+    log.debug("Skipped read mapping step.")
 
   # Step 3: Deduplication
   if not run_args.no_dedup:
+    log.info("[%s] Performing SAM file processing...", step)
     dedup_options = {
       "collate": copy.copy(options["options"]["sam_collate"]),
       "fixmate": copy.copy(options["options"]["sam_fixmate"]),
       "sort": copy.copy(options["options"]["sam_sort"]),
       "markdup": copy.copy(options["options"]["sam_markdup"])
     }
-    sam_cmd = prlsam.dedup_files(
-      files=prlutil.filter_files(dir_list["out_dir"], (".sam",".bam",".cram")),
+    sam_cmd = batch_dedup(
       in_dir=dir_list["out_dir"],
       out_dir=dir_list["out_dir"],
-      temp_dir=dir_list["tmp_dir"],
+      tmp_dir=dir_list["tmp_dir"],
       opt_set=dedup_options
     )
 
-    logger.info("[%s] Performing SAM file processing...", step)
     step += 1
     if run_args.dryrun:
       for c, i in zip(sam_cmd, range(1, len(sam_cmd)+1)):
-        logger.info("#%s ~ %s", i, c)
+        log.info("#%s ~ %s", i, c)
     else:
-      prlutil.run_parallel(sam_cmd, options["workers"])
+      run_parallel(sam_cmd, options["workers"])
   else:
-    logger.debug("Skipped SAM file processing step.")
+    log.debug("Skipped SAM file processing step.")
 
   # Step 4: Variant Calling
   if not run_args.no_genotyping:
-    fai_cmd = prlsam.index_sam(
-      ref_dir=dir_list["ref_dir"],
+    log.info("[%s] Performing reference indexing...", step)
+    gen_cmd = batch_genotype(
+      in_dir=dir_list["out_dir"],
+      ref_path=os.path.join(dir_list["ref_dir"], options["input"]["main_ref"]),
+      in_flag="." + options["flags"]["dedup"],
+      out_dir=dir_list["out_dir"],
       options=copy.copy(options["options"]["sam_faidx"])
     )
 
-    logger.info("[%s] Performing reference indexing...", step)
     step += 1
     if run_args.dryrun:
-      for c, i in zip(fai_cmd, range(1, len(fai_cmd)+1)):
-        logger.info("#%s ~ %s", i, c)
+      log.info("#%s ~ %s", 1, gen_cmd[0])
     else:
-      prlutil.run_parallel(fai_cmd, options["workers"])
+      run_parallel(gen_cmd[0], options["workers"])
 
-    gen_cmd = prlvar.bcft_mpileup(
-      in_dir=dir_list["out_dir"],
-      flag=options["input"]["bcftools_mpileup"]["flag"],
-      out_dir=dir_list["out_dir"],
-      ref=os.path.join(dir_list["ref_dir"], options["input"]["bcftools_mpileup"]["ref"]),
-      options=copy.copy(options["options"]["bcftools_mpileup"])
-    )
-
-    logger.info("[%s] Generating genotype likelihoods...", step)
+    log.info("[%s] Performing calculation of genotype likelihoods...", step)
     step += 1
     if run_args.dryrun:
-      for c, i in zip(gen_cmd, range(1, len(gen_cmd)+1)):
-        logger.info("#%s ~ %s", i, c)
+      for c, i in zip(gen_cmd[1:], range(1, len(gen_cmd))):
+        log.info("#%s ~ %s", i, c)
     else:
-      prlutil.run_parallel(gen_cmd, options["workers"])
+      run_parallel(gen_cmd[1:], options["workers"])
   else:
-    logger.debug("Skipped variant calling step.")
+    log.debug("Skipped calculation for genotype likelihoods.")
+
+def main():     
+  time_start = time.perf_counter()
+
+  try:
+    run_args = parse_options()
+  except Exception:
+    print("Unable to process args. Terminating program...")
+    sys.exit(1)
+
+  setup_logging(run_args.log, run_args.quiet)
+  log.info("Run started at %s", time_start)
+  process_project(run_args)
 
   time_end = time.perf_counter()
   time_span = timedelta(seconds=time.perf_counter()-time_start)
-  logging.info("Run ended at %s. Run duration: %s", time_end, time_span)
+  log.info("Run ended at %s. Run duration: %s", time_end, time_span)
 
 if __name__ == "__main__":
   main()
