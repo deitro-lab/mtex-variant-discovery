@@ -32,7 +32,7 @@ class SeqFile:
       self.is_zip = True
     else:
       self.ext = "." + tokens[-1]
-      self.flags = tokens[1:-1]
+      self.flags = tuple(tokens[1:-1])
 
     for fmt in ext_map.keys():
       if self.is_zip:
