@@ -152,13 +152,12 @@ def markdup_sam(map_file, out_dir = None, out_flag = ".dedup", tmp_dir = None, m
       f_out += "." + options["O"].lower()
     elif "output-fmt" in options.keys():
       f_out = "." + options["output-fmt"].lower()
-      cmd += " -o " + f_out
     else:
       if "u" in options.keys():
         f_out += ".sam"
       else:
         f_out += ".bam"
-    cmd += " -o " + f_out
+    cmd += " " + f_out
   else:
     cmd += " -"
     

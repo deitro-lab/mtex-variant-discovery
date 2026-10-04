@@ -1,7 +1,8 @@
 import os.path as op
 from .preprocessing import prep_read
 from .mapping import is_indexed, index_ref, map_read
-from .formats import SeqFile, get_paired_reads, filter_files, EXT_FA
+from .formats import SeqFile, get_paired_reads, filter_files, EXT_FA, EXT_SAM
+from .samfiles import collate_sam, fixmate_sam, markdup_sam, sort_sam
 from .utils import log
 
 def batch_preprocess(in_dir, in_flags = ("_1", "_2"), out_flag = "clean", out_dir = None, rep_dir = None, options = dict()):
@@ -59,3 +60,62 @@ def batch_map(in_dir, ref_path, in_flags = ("_1", "_2"), prep_flag = ".clean", o
       log.error("Batch mapping encountered an unexpected error. %s", e)
 
   return commands
+
+def batch_dedup(in_dir, out_dir = None, tmp_dir = None, opt_set = dict()):
+  if not op.isdir(in_dir):
+    log.error("Specified input directory not found.")
+    raise ValueError
+  if len(opt_set) == 0:
+    opt_set.update({"collate": dict()})
+    opt_set.update({"fixmate": dict()})
+    opt_set.update({"sort": dict()})
+    opt_set.update({"markdup": dict()})
+
+  if "m" not in opt_set["fixmate"].keys():
+    opt_set["fixmate"].update({"m": True})
+  for k in ("n", "N", "t"):
+    opt_set["sort"].pop(k, None)
+  
+  commands = []
+
+  for spath in filter_files(in_dir, EXT_SAM):
+    sam = SeqFile(in_dir, spath)
+
+    if len(sam.flags) > 0:
+      continue
+
+    try:
+      cmd_pipe = collate_sam(
+        map_file=sam,
+        out_dir=out_dir,
+        tmp_dir=tmp_dir,
+        mode="in",
+        options=opt_set["collate"]
+      )[0]
+      fm_cmd = fixmate_sam(
+        map_file=sam,
+        out_dir=out_dir,
+        mode="pipe",
+        options=opt_set["fixmate"]
+      )[0]
+      sort_cmd = sort_sam(
+        map_file=sam,
+        out_dir=out_dir,
+        tmp_dir=tmp_dir,
+        mode="pipe",
+        options=opt_set["sort"]
+      )[0]
+      cmd_pipe += " | " + fm_cmd + " | " + sort_cmd
+      cmd_pipe += " | " + markdup_sam(
+        map_file=sam,
+        out_dir=out_dir,
+        tmp_dir=tmp_dir,
+        mode="out",
+        options=opt_set["markdup"]
+      )[0]
+      commands.append(cmd_pipe)
+    except Exception as e:
+      log.error("Batch deduplication encountered an unexpected error. %s", e)
+
+  return commands
+  
