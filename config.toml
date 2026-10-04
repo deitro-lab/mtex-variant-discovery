@@ -3,51 +3,28 @@ workers = 2
 [directories]
 # Relative paths will be resolved based on project directory
   # if no 'root' is defined 
-
-# root: root directory for resolving other project directories
 # in_dir: directory for data files (i.e. short reads)
 # out_dir: directory for file processing outputs
 # ref_dir: directory for reference genome assemblies
 # tmp_dir: directory for temporary files
 # rep_dir: directory for supplementary stats & reports
 
-#root = '.'
 in_dir = './reads'
 out_dir = './output'
 ref_dir = './refs'
 tmp_dir = './tmp'
 rep_dir = './output/reports'
 
-[slurm]
-email = 'test.id@gmail.com'
-username = 'test.id'
-partition = ['batch','debug']
+[flags]
+pair = ['_1', '_2']
+fastp = 'clean'
+dedup = 'dedup'
 
-# input.<tool> - additional info related to input files
+[input]
+main_ref = 'ref_genome.norm.fa'
+
 # options.<tool> - follows syntax of options specified by
   # the tool; set flags to true
-
-# flag_type: position of read identifier in filename
-# read1_flag: identifier for 1st read in paired-end data
-# read2_flag: identifier for 2nd read in paired-end data
-# ref_file: primary reference genome file to use
-[input.fastp]
-flag_type = 'suffix'
-read1_flag = '_1'
-read2_flag = '_2'
-read_flags = ['_1', '_2']
-
-[input.bwa_mem]
-ref = 'ref_genome.norm.fa'
-prep_ext = '.clean.fastq.gz'
-
-[input.samtools]
-mode = "pipe"
-
-[input.bcftools_mpileup]
-ref = 'ref_genome.norm.fa'
-flag = ".dedup"
-
 [options.fastp]
 thread = 8
 trim_poly_g = true
@@ -75,7 +52,7 @@ m = true
 
 [options.sam_sort]
 threads = 5
-m = "29491M"
+m = '29491M'
 output-fmt = 'SAM'
 u = true
 
@@ -92,12 +69,5 @@ threads = 2
 threads = 11
 d = 8000
 ambig-reads = 'drop'
-annotate = '"AD,DP,SP,SCR"'
+annotate = 'AD,DP,SP,SCR'
 output-type = 'b7'
-
-# Reference analysis
-[input.busco]
-lineages = ['embryophyta_odb12.2026-05-22.tar.gz', 'liliopsida_odb12.2026-05-22.tar.gz']
-
-[options.busco]
-c = 2
