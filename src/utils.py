@@ -5,6 +5,7 @@ import subprocess
 import tomllib
 
 def get_logger(name, level=logging.INFO):
+  logging.basicConfig(level=level)
   logger = logging.getLogger(name)
   if logger.hasHandlers():
     logger.handlers.clear()
