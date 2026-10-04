@@ -197,7 +197,7 @@ def process_project(run_args):
       ref_path=os.path.join(dir_list["ref_dir"], options["input"]["main_ref"]),
       in_flag="." + options["flags"]["dedup"],
       out_dir=dir_list["out_dir"],
-      options=copy.copy(options["options"]["sam_faidx"])
+      options=copy.copy(options["options"]["bcftools_mpileup"])
     )
 
     step += 1
