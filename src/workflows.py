@@ -2,8 +2,9 @@ import os.path as op
 from .preprocessing import prep_read
 from .mapping import is_indexed, index_ref, map_read
 from .formats import SeqFile, get_paired_reads, filter_files, EXT_FA, EXT_SAM
-from .samfiles import collate_sam, fixmate_sam, markdup_sam, sort_sam
+from .samfiles import collate_sam, fixmate_sam, markdup_sam, sort_sam, index_sam
 from .utils import log
+from .varcall import bcft_mpileup
 
 def batch_preprocess(in_dir, in_flags = ("_1", "_2"), out_flag = "clean", out_dir = None, rep_dir = None, options = dict()):
   if not op.isdir(in_dir):
@@ -118,4 +119,31 @@ def batch_dedup(in_dir, out_dir = None, tmp_dir = None, opt_set = dict()):
       log.error("Batch deduplication encountered an unexpected error. %s", e)
 
   return commands
+
+def batch_genotype(in_dir, ref_path, in_flag = ".dedup", out_dir = None, options = dict()):
+  if not op.isdir(in_dir):
+    log.error("Specified input directory not found.")
+    raise ValueError
+  if not op.exists(ref_path):
+    log.error("Reference file does not exist.")
+    raise ValueError
   
+  commands = []
+
+  ref = SeqFile(*op.split(ref_path))
+  try:
+    commands.append(index_sam(ref))
+  except Exception as e:
+    log.error("Indexing step encountered an unexpected error. %s", e)
+    return commands
+
+  query = tuple([in_flag + ex for ex in EXT_SAM])
+  for spath in filter_files(in_dir, query, False):
+    sam = SeqFile(in_dir, spath)
+    try:
+      cmd = bcft_mpileup(sam, ref, out_dir, options)
+      commands.append(cmd)
+    except Exception as e:
+      log.error("Batch calculation of genotype likelihood encountered an unexpected error. %s", e)
+
+  return commands
