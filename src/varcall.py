@@ -22,8 +22,8 @@ def bcft_mpileup(map_file, ref, out_dir = None, options = dict()):
     log.error("Invalid file type(s) detected.")
     raise ValueError
 
-  if "O" not in options.keys() or "output-type" in options.keys():
-    options.update({"O": "z7"})
+  if "O" not in options.keys() and "output-type" not in options.keys():
+    options.update({"O": "b8"})
 
   cmd = f"bcftools mpileup"
   for opt in to_optstring(options):

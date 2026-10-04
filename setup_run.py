@@ -2,10 +2,9 @@
 
 import math
 import os
-
 from tomlkit.toml_file import TOMLFile
 
-import src.utilities as prlutil
+from src.formats import filter_files
 
 def get_mem(cpus=1, mem_per_cpu=4096):
   buffer = 0.8
@@ -18,7 +17,7 @@ def main():
   job = {
     "ntasks": int(os.environ.get("SLURM_NTASKS", 1)),
     "cpt_max": int(os.environ.get("SLURM_CPUS_PER_TASK", 4)),
-    "mem_per_cpu": int(os.environ.get("SLURM_MEM_PER_CPU", "4096"))
+    "mem_per_cpu": int(os.environ.get("SLURM_MEM_PER_CPU", 4096))
   }
 
   # Set CPU alloc presets
@@ -32,7 +31,7 @@ def main():
     print(f"{k}: {v}")
   print("#======================#\n")
 
-  config_list = prlutil.filter_files(".", ".toml")
+  config_list = filter_files(".", ".toml")
   
   for f in config_list:
     try:
@@ -46,6 +45,15 @@ def main():
     # Set no. of workers available to
     # process files in parallel
     config["workers"] = job["ntasks"]
+
+    # Clear duplicate settings
+    config["options"]["fastp"].pop("w", None)
+    config["options"]["sam_collate"].pop("@", None)
+    config["options"]["sam_fixmate"].pop("@", None)
+    config["options"]["sam_sort"].pop("@", None)
+    config["options"]["sam_markdup"].pop("@", None)
+    config["options"]["sam_faidx"].pop("@", None)
+    config["options"]["fastp"].pop("w", None)
 
     # Set tool-specific multithreading & memory specs
     config["options"]["fastp"]["thread"] = job["cpt_himid"]-1

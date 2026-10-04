@@ -84,8 +84,10 @@ def process_project(run_args):
 
   # Setup compression in config
   if run_args.compress:
+    options["options"]["sam_markdup"].pop("O", None)
     options["options"]["sam_markdup"].update({"output-fmt": "BAM"})
-    options["options"]["bcftools_mpileup"].update({"output-type": "b7"})
+    options["options"]["bcftools_mpileup"].pop("O", None)
+    options["options"]["bcftools_mpileup"].update({"output-type": "b8"})
 
   step = 1
 
