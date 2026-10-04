@@ -1,57 +1,33 @@
-#!/usr/bin/env python
+import os.path as op
+from .utils import log, to_optstring
 
-import logging
-import os
-
-import src.utilities as prlutil
-
-def bcft_mpileup(in_dir, flag="", out_dir=None, ref=None, options=dict()):
-  logger = logging.getLogger(__name__)
-  alext = (".sam", ".bam", ".cram")
-  flag_filter = tuple(flag + e for e in alext)
+def bcft_mpileup(map_file, ref, out_dir = None, options = dict()):
   vcext = {"b": ".bcf", "u": ".bcf", "z": ".vcf", "v": ".vcf"}
 
-  if not os.path.isdir(in_dir):
-    logger.error("Specified input directory not found.")
-    raise ValueError
-  if not os.path.exists(ref):
-    logger.error("Specified reference file not found.")
-    raise ValueError
   if out_dir == None:
-    out_dir = in_dir
-  elif not os.path.isdir(out_dir):
-    logger.error("Specified output directory not found.")
+    log.warning("No output directory specified.")
+    out_dir = "."
+  if not op.isdir(out_dir):
+    log.error("Specified output directory not found.")
+    raise ValueError
+  if map_file.format != "sam" or ref.format != "fa":
+    log.error("Invalid file type(s) detected.")
     raise ValueError
 
-  commands = []
+  if "O" not in options.keys() or "output-type" in options.keys():
+    options.update({"O": "z7"})
 
-  processed = set()
+  cmd = f"bcftools mpileup"
+  for opt in to_optstring(options):
+    cmd += " " + opt
 
+  out_vcf = op.join(out_dir, map_file.name)
   if "O" in options.keys():
-    otype = " -O " + options["O"]
-    ext = vcext[options.pop("O", None)]
+    out_vcf += vcext[options["O"][0]]
   elif "output-type" in options.keys():
-    otype = " --output-type " + options["output-type"]
-    ext = vcext[options.pop("output-type", None)[0]]
+    out_vcf += vcext[options["output-type"][0]]
   else:
-    otype = " -O z"
-    ext = ".VCF"
+    out_vcf += ".vcf"
+  cmd += f" --fasta-ref {ref.get_path()} --output {out_vcf} {map_file.get_path()}"
 
-  for file in prlutil.filter_files(in_dir, flag_filter):
-    path = os.path.join(in_dir, file)
-
-    if path in processed:
-      continue
-
-    processed.add(path)
-
-    cmd = f"bcftools mpileup{otype}"
-
-    for opt in prlutil.to_optstring(options):
-      cmd += " " + opt
-
-    out_vcf = prlutil.strip_ext(os.path.basename(path), alext) + ext
-    cmd += f" --fasta-ref {ref} --output {os.path.join(out_dir, out_vcf)} {path}"
-    commands.append(cmd)
-
-  return commands
+  return cmd
