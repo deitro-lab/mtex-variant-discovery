@@ -19,6 +19,7 @@ This workflow was developed for batched processing of Illumina short reads.
 ├── LICENSE
 ├── README.md
 ├── config.toml
+├── environment.yml
 ├── logs/
 ├── normalize_refs.sh
 ├── output/
@@ -26,13 +27,19 @@ This workflow was developed for batched processing of Illumina short reads.
 ├── reads/
 ├── refs/
 ├── requirements.txt
+├── setup_run.py
 ├── src/
 │   ├── __init__.py
+│   ├── base.py
 │   ├── fastp.LICENSE
+│   ├── formats.py
 │   ├── mapping.py
 │   ├── preprocessing.py
 │   ├── samfiles.py
-│   └── utilities.py
+│   ├── utils.py
+│   ├── varcall.py
+│   ├── worker.py
+│   └── workflows.py
 ├── tmp/
 └── var_discovery.py
 ```
@@ -60,26 +67,28 @@ By default, this command will execute the main script and perform all steps in t
 ```shell
 python var_discovery.py [-h] [-c CONFIG] [options...]
 
-# Configuration
--c, --config           Path to config file. Default is "./config.toml" (str)
--r, --is-dryrun        Only perform dry run of steps (commands generated but not executed). Disabled by default.
+# Config
+-c CONFIG, --config CONFIG
+                      Path to config file
+-r, --dryrun          Only perform dry run of steps (commands generated but not executed)
 
 # Run steps
--p, --no-preprocess    Disable preprocessing step
--i, --no-index         Disable reference indexing step
--m, --no-map           Disable read mapping step
--d, --no-dedup         Disable sorting & deduplication of alignment files
--g, --no-genotyping    Disable estimation of genotype likelihoods
+-p, --no-preprocess   Disable preprocessing step
+-i, --no-index        Disable reference indexing step
+-m, --no-map          Disable read mapping step
+-d, --no-dedup        Disable sorting & deduplication of alignment files
+-g, --no-genotyping   Disable estimation of genotype likelihoods
 
 # Tooling
---aligner              Specify alignment tool. Default is "bwa-mem2". (bwa-mem2/minibwa)
+--aligner ALIGNER     Specify alignment tool (bwa-mem2/minibwa)
+-z, --compress        Enable compression for output files
 
 # Output
--l LOG, --log LOG      Configure logging (c, console; d, time-specific files; s, single file)
--q, --quiet            Disable logging
+-l LOG, --log LOG     Configure logging [c: console, d: time-specific files, s: single file]
+-q, --quiet           Disable logging
 
 # Help
--h, --help             Print program help
+-h, --help            show this help message and exit
 ```
 
 ## SLURM
@@ -126,8 +135,8 @@ Most of the settings for the script and the tools it uses have to be set in the 
 | tmp_dir | `path` | Directory for temporary files                |
 | rep_dir | `path` | Directory for reports, metrics, and stats    |
 | workers | `int`  | Max subprocesses available for parallel jobs |
+| main_ref | `str`  | File name of reference sequence |
 
-The `input.<tool_name>` settings provide needed information on how to process input data.
 Refer to the corresponding tool documentation for configuring `options.<tool_name>`:
 - [fastp](https://github.com/OpenGene/fastp)
 - [bwa](http://bio-bwa.sourceforge.net/bwa.shtml)
