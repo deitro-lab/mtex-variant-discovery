@@ -16,6 +16,10 @@ def is_indexed(path, aligner):
   return True
 
 def index_ref(ref, aligner = "bwa-mem2", options=dict()):
+  if ref.format != "fa":
+    log.error("Invalid file type detected.")
+    raise ValueError
+  
   if aligner == "bwa-mem2":
     cmd = f"bwa-mem2 index"
   elif aligner == "minibwa":

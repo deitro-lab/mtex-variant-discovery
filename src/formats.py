@@ -45,7 +45,10 @@ class SeqFile:
       self.format = "unknown"
 
   def __repr__(self):
-    return self.name + "." + ".".join(self.flags) + self.ext
+    if len(self.flags) < 1:
+      return self.name + ".".join(self.flags) + self.ext
+    else:
+      return self.name + "." + ".".join(self.flags) + self.ext
 
   def get_name(self):
     return self.name + ".".join(self.flags)

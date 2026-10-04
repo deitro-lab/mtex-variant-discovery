@@ -1,268 +1,172 @@
-#!/usr/bin/env python
+import os.path as op
+from .utils import log, to_optstring
 
-import logging
-import os
-
-import src.utilities as prlutil
-
-def is_mapfile(path):
-  alext = (".sam", ".bam", ".cram")
-  if path.endswith(alext):
-    return True
-  else:
-    return False
-
-def check_args(out_dir, temp_dir, mode):
-  logger = logging.getLogger(__name__)
-  modes = ("inout", "in", "out", "pipe")
-
-  if mode not in modes:
-    logger.error("Invalid operation mode.")
+def collate_sam(map_file, out_dir = None, out_flag = ".coll", tmp_dir = None, mode = "inout", options = dict()):
+  if out_dir == None:
+    log.warning("No output directory specified.")
+    out_dir = "."
+  if tmp_dir == None:
+    log.warning("No temp files directory specified.")
+    tmp_dir = "."
+  if map_file.format != "sam":
+    log.error("Invalid file type detected.")
     raise ValueError
-  if (mode == "inout" or mode == "out") and out_dir == None:
-    logger.error("Output directory not specified.")
+  if mode not in ("pipe", "in", "out", "inout"):
+    log.error("Invalid mode specified.")
     raise ValueError
-  if temp_dir == None:
-    logger.error("Temporary files directory not found.")
-    raise ValueError
-  if (mode == "inout" or mode == "out") and not os.path.isdir(out_dir):
-    logger.error("Specified output directory not found.")
-    raise ValueError
-  if not os.path.isdir(temp_dir):
-    logger.error("Specified temporary files directory not found.")
-    raise ValueError
-
-def collate_sam(map_file=None, out_dir=None, temp_dir=None, mode="inout", options=dict()):
-  logger = logging.getLogger(__name__)
-
-  try:
-    check_args(out_dir, temp_dir, mode)
-  except ValueError:
-    raise
-
-  base_name = os.path.splitext(os.path.basename(map_file))[0]
-  f_out = ""
-  cmd = f"samtools collate -T {os.path.join(temp_dir, base_name)}"
-  if mode == "inout" or mode == "out":
-    cmd += " -o"
-  else:
-    cmd += " -O"
-
-  for opt in prlutil.to_optstring(options):
-    cmd += " " + opt
-
-  if mode == "inout" or mode == "in":
-    cmd += " " + map_file
-  else:
-    cmd += " -"
-  if mode == "inout" or mode == "out":
-    f_out = os.path.join(out_dir, base_name + ".coll")
-    cmd += " " + f_out
-
-  return (cmd, f_out)
-
-def fixmate_sam(map_file, out_dir=None, temp_dir=".", mode="inout", options=dict()):
-  logger = logging.getLogger(__name__)
-
-  try:
-    check_args(out_dir, temp_dir, mode)
-  except ValueError:
-    raise
 
   f_out = ""
-  cmd = "samtools fixmate"
-  for opt in prlutil.to_optstring(options):
+  cmd = f"samtools collate -T {op.join(tmp_dir, map_file.name)}"
+  for opt in to_optstring(options):
     cmd += " " + opt
 
-  base_name = os.path.splitext(os.path.basename(map_file))[0] + ".fm"
-  if mode == "inout" or mode == "in":
-    cmd += " " + map_file
-  else:
-    cmd += " -"
-
   if mode == "inout" or mode == "out":
-    f_out = os.path.join(out_dir, base_name + ".coll")
-    cmd += " " + f_out
-    if "O" in options.keys():
-      f_out = os.path.join(out_dir, base_name + "." + options["O"].lower())
-      cmd += " " + f_out
-    elif "output-fmt" in options.keys():
-      f_out = os.path.join(out_dir, base_name + "." + options["output-fmt"].lower())
-      cmd += " " + f_out
+    f_out = op.join(out_dir, map_file.name + out_flag)
+    if "output-fmt" in options.keys():
+      f_out += "." + options["output-fmt"].lower()
     else:
-      f_out = os.path.join(out_dir, base_name + ".bam")
-      cmd += " " + f_out
+      if "u" in options.keys():
+        f_out += ".sam"
+      else:
+        f_out += ".bam"
+    cmd += f" -o {f_out}"
+
+  if mode == "inout" or mode == "in":
+    cmd += " " + map_file.get_path()
   else:
     cmd += " -"
 
   return (cmd, f_out)
 
-def sort_sam(map_file=None, out_dir=None, temp_dir=None, sorting="", mode="inout", options=dict()):
-  logger = logging.getLogger(__name__)
-
-  try:
-    check_args(out_dir, temp_dir, mode)
-  except ValueError:
-    raise
-  if not isinstance(sorting, str):
+def fixmate_sam(map_file, out_dir = None, out_flag = ".fm", mode = "inout", options = dict()):
+  if out_dir == None:
+    log.warning("No output directory specified.")
+    out_dir = "."
+  if map_file.format != "sam":
+    log.error("Invalid file type detected.")
+    raise ValueError
+  if mode not in ("pipe", "in", "out", "inout"):
+    log.error("Invalid mode specified.")
     raise ValueError
   
-  base_name = os.path.splitext(os.path.basename(map_file))[0]
   f_out = ""
-  cmd = f"samtools sort -T {os.path.join(temp_dir, base_name)}"
-  if sorting.lower() == "n" or (sorting.startswith("t ") and len(sorting.strip()) > 2):
-    cmd += " -" + sorting
-
-  for opt in prlutil.to_optstring(options):
+  cmd = "samtools fixmate"
+  for opt in to_optstring(options):
     cmd += " " + opt
 
-  if mode == "inout" or mode == "out":
-    base_name += ".sorted"
-    if "O" in options.keys():
-      f_out = os.path.join(out_dir, base_name + "." + options["O"].lower())
-      cmd += " -o " + f_out
-    elif "output-fmt" in options.keys():
-      f_out = os.path.join(out_dir, base_name + "." + options["output-fmt"].lower())
-      cmd += " -o " + f_out
-    else:
-      f_out = os.path.join(out_dir, base_name + ".bam")
-      cmd += " -o " + f_out
-
   if mode == "inout" or mode == "in":
-    cmd += " " + map_file
+    cmd += " " + map_file.get_path()
+  else:
+    cmd += " -"
+
+  if mode == "inout" or mode == "out":
+    f_out = op.join(out_dir, map_file.name + out_flag)
+    if "O" in options.keys():
+      f_out += "." + options["O"].lower()
+    elif "output-fmt" in options.keys():
+      f_out += "." + options["output-fmt"].lower() 
+    else:
+      if "u" in options.keys():
+        f_out += ".sam"
+      else:
+        f_out += ".bam"
+    cmd += " " + f_out
   else:
     cmd += " -"
 
   return (cmd, f_out)
 
-def markdup_sam(map_file=None, out_dir=None, temp_dir=None, mode="inout", options=dict()):
-  logger = logging.getLogger(__name__)
-
-  try:
-    check_args(out_dir, temp_dir, mode)
-  except ValueError:
-    raise
-
-  base_name = os.path.splitext(os.path.basename(map_file))[0]
+def sort_sam(map_file, out_dir = None, out_flag = ".sort", tmp_dir = None, sorting = "", mode = "inout", options = dict()):
+  if out_dir == None:
+    log.warning("No output directory specified.")
+    out_dir = "."
+  if tmp_dir == None:
+    log.warning("No temp files directory specified.")
+    tmp_dir = "."
+  if map_file.format != "sam":
+    log.error("Invalid file type detected.")
+    raise ValueError
+  if mode not in ("pipe", "in", "out", "inout"):
+    log.error("Invalid mode specified.")
+    raise ValueError
+  
   f_out = ""
-  cmd = f"samtools markdup -T {os.path.join(temp_dir, base_name)}"
-  for opt in prlutil.to_optstring(options):
+  cmd = f"samtools sort -T {op.join(tmp_dir, map_file.name)}"
+  if sorting.lower() == "n" or (sorting.startswith("t ") and len(sorting.strip()) > 2):
+    cmd += " -" + sorting
+    options.pop("n", None)
+    options.pop("N", None)
+    options.pop("t", None)
+
+  for opt in to_optstring(options):
     cmd += " " + opt
 
+  if mode == "inout" or mode == "out":
+    f_out = op.join(out_dir, map_file.name + out_flag)
+    if "O" in options.keys():
+      f_out += "." + options["O"].lower()
+    elif "output-fmt" in options.keys():
+      f_out = "." + options["output-fmt"].lower()
+      cmd += " -o " + f_out
+    else:
+      if "u" in options.keys():
+        f_out += ".sam"
+      else:
+        f_out += ".bam"
+    cmd += " -o " + f_out
+
   if mode == "inout" or mode == "in":
-    cmd += " " + map_file
+    cmd += " " + map_file.get_path()
   else:
     cmd += " -"
 
-  base_name += ".dedup"
+  return (cmd, f_out)
+
+def markdup_sam(map_file, out_dir = None, out_flag = ".dedup", tmp_dir = None, mode = "inout", options = dict()):
+  if out_dir == None:
+    log.warning("No output directory specified.")
+    out_dir = "."
+  if tmp_dir == None:
+    log.warning("No temp files directory specified.")
+    tmp_dir = "."
+  if map_file.format != "sam":
+    log.error("Invalid file type detected.")
+    raise ValueError
+  if mode not in ("pipe", "in", "out", "inout"):
+    log.error("Invalid mode specified.")
+    raise ValueError
+
+  f_out = ""
+  cmd = f"samtools markdup -T {op.join(tmp_dir, map_file.name)}"
+  for opt in to_optstring(options):
+    cmd += " " + opt
+
+  if mode == "inout" or mode == "in":
+    cmd += " " + map_file.get_path()
+  else:
+    cmd += " -"
+
   if mode == "inout" or mode == "out":
+    f_out = op.join(out_dir, map_file.name + out_flag)
     if "O" in options.keys():
-      f_out = os.path.join(out_dir, base_name + "." + options["O"].lower())
-      cmd += " " + f_out
+      f_out += "." + options["O"].lower()
     elif "output-fmt" in options.keys():
-      f_out = os.path.join(out_dir, base_name + "." + options["output-fmt"].lower())
-      cmd += " " + f_out
+      f_out = "." + options["output-fmt"].lower()
+      cmd += " -o " + f_out
     else:
-      f_out = os.path.join(out_dir, base_name + ".bam")
-      cmd += " " + f_out
+      if "u" in options.keys():
+        f_out += ".sam"
+      else:
+        f_out += ".bam"
+    cmd += " -o " + f_out
   else:
     cmd += " -"
     
   return (cmd, f_out)
 
-def index_sam(ref_dir, options=dict()):
-  faext = (".fasta", ".fa", ".fa.gz", ".fasta.gz")
-  commands = []
+def index_sam(ref, options=dict()):
+  cmd = f"samtools faidx {ref.get_path()}"
+  for opt in to_optstring(options):
+    cmd += " " + opt
 
-  if not os.path.isdir(ref_dir):
-    raise ValueError
-
-  processed = set() 
-
-  for file in prlutil.filter_files(ref_dir, faext):
-    path = os.path.join(ref_dir, file)
-
-    if os.path.exists(path + ".fai"):
-      continue
-    if path in processed:
-      continue
-
-    processed.add(path)
-
-    cmd = f"samtools faidx {path}"
-
-    for opt in prlutil.to_optstring(options):
-      cmd += " " + opt
-
-    commands.append(cmd)
-
-  return commands
-
-def dedup_files(files, in_dir, out_dir, temp_dir, opt_set):
-  logger = logging.getLogger(__name__)
-  alext = (".sam", ".bam", ".cram")
-  flags = (".coll", ".fm", ".sorted", ".dedup")
-
-  if not os.path.isdir(in_dir):
-    logger.error("Specified input directory not found.")
-    raise ValueError
-  if not os.path.isdir(out_dir):
-    logger.error("Specified output directory not found.")
-    raise ValueError
-  if not os.path.isdir(temp_dir):
-    logger.error("Specified temporary files directory not found.")
-    raise ValueError
-  if not {"collate","fixmate","sort","markdup"} <= set(opt_set.keys()):
-    logger.error("Missing options for samtools collate/fixmate/sort/markdup.")
-    raise ValueError
-
-  if not "m" in opt_set["fixmate"].keys():
-    opt_set["fixmate"].update({"m": True})
-  for k in ("n", "N", "t"):
-    opt_set["sort"].pop(k, None)
-
-  commands = []
-
-  processed = set()
-
-  for f in files:
-    path = os.path.join(in_dir, f)
-
-    if prlutil.strip_ext(f, alext).endswith(flags):
-      continue
-    if path in processed:
-      continue
-
-    processed.add(path)
-
-    cmd_pipe = collate_sam(
-      map_file=path,
-      out_dir=out_dir,
-      temp_dir=temp_dir,
-      mode="in",
-      options=opt_set["collate"]
-    )[0]
-    fm_cmd = fixmate_sam(
-      map_file=path,
-      out_dir=out_dir,
-      temp_dir=temp_dir,
-      mode="pipe",
-      options=opt_set["fixmate"]
-    )[0]
-    sort_cmd = sort_sam(
-      map_file=fm_cmd[1],
-      temp_dir=temp_dir,
-      mode="pipe",
-      options=opt_set["sort"]
-    )[0]
-    cmd_pipe += " | " + fm_cmd + " | " + sort_cmd
-    cmd_pipe += " | " + markdup_sam(
-      map_file=path,
-      out_dir=out_dir,
-      temp_dir=temp_dir,
-      mode="out",
-      options=opt_set["markdup"]
-    )[0]
-
-    commands.append(cmd_pipe)
-  return commands
+  return cmd
