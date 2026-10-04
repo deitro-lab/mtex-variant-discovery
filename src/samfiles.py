@@ -44,6 +44,8 @@ def collate_sam(map_file, out_dir = None, out_flag = ".coll", tmp_dir = None, mo
       else:
         f_out += ".bam"
     cmd += f" -o {f_out}"
+  else:
+    cmd += " -O"
 
   if mode == "inout" or mode == "in":
     cmd += " " + map_file.get_path()

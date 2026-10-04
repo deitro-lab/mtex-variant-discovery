@@ -204,7 +204,7 @@ def process_project(run_args):
     if run_args.dryrun:
       log.info("#%s ~ %s", 1, gen_cmd[0])
     else:
-      run_command(gen_cmd[0], options["workers"])
+      run_command(gen_cmd[0])
 
     log.info("[%s] Performing calculation of genotype likelihoods...", step)
     step += 1
