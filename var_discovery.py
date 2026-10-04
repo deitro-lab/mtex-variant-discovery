@@ -9,7 +9,7 @@ import time
 
 from src.base import parse_options, parse_config, init_project
 from src.utils import log, LOG_FORMAT
-from src.worker import run_parallel
+from src.worker import run_parallel, run_command
 from src.workflows import batch_preprocess, batch_index, batch_map, batch_dedup, batch_genotype
 
 LOG_DIR = "./logs/"
@@ -137,7 +137,7 @@ def process_project(run_args):
       in_dir=dir_list["out_dir"],
       ref_path=os.path.join(dir_list["ref_dir"], options["input"]["main_ref"]),
       in_flags=options["flags"]["pair"],
-      prep_flag=options["flags"]["fastp"],
+      prep_flag="." + options["flags"]["fastp"],
       out_dir=dir_list["out_dir"],
       aligner=run_args.aligner,
       is_compress=run_args.compress,
@@ -193,7 +193,7 @@ def process_project(run_args):
     if run_args.dryrun:
       log.info("#%s ~ %s", 1, gen_cmd[0])
     else:
-      run_parallel(gen_cmd[0], options["workers"])
+      run_command(gen_cmd[0], options["workers"])
 
     log.info("[%s] Performing calculation of genotype likelihoods...", step)
     step += 1
