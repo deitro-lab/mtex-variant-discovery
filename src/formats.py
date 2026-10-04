@@ -84,7 +84,7 @@ class PairedCollection:
 
     seq.name = seq.name[:-len(flags[0])]
     self.base = seq
-    self.flags = flags
+    self.flags = tuple(flags)
 
   def __repr__(self):
     r1 = self.base.print_flags(self.flags[0], "", False)
