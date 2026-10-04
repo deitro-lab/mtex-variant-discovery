@@ -1,9 +1,18 @@
+"""
+Manager for running generated command strings
+via subprocess module
+"""
+
 from concurrent.futures import ProcessPoolExecutor
 import os
 import subprocess
+
 from .utils import log
 
 def run_command(cmd, stdin=None):
+  """
+  Execute single command string
+  """
   log.info("Running command: %s", cmd)
   try:
     if stdin == None:
@@ -31,6 +40,11 @@ def run_command(cmd, stdin=None):
   return run_result.stdout
 
 def run_pipeline(cmd_set):
+  """
+  Execute list of commands as a pipeline
+  Note: unsuitable for processes with heavy output,
+  may exceed buffer limit
+  """
   log.info("Queuing %s command(s):", len(cmd_set))
 
   result_set = []
@@ -45,6 +59,11 @@ def run_pipeline(cmd_set):
   return result_set
 
 def run_parallel(cmd_queue, procs=None):
+  """
+  Execute multiple commands in parallel via
+  multiprocessing
+  Specify procs as max number of parallel tasks
+  """
   if procs is None:
     procs = max(1, os.cpu_count() // 4)
   elif procs <= 0:
@@ -68,6 +87,11 @@ def run_parallel(cmd_queue, procs=None):
   return process_out
 
 def run_serial(cmd_queue):
+  """
+  Execute multiple commands sequentially
+  Can be used as alternative for run_parallel in
+  low-resource setting
+  """
   process_out = []
   
   if any(isinstance(c, list) for c in cmd_queue):

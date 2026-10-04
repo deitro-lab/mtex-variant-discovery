@@ -1,3 +1,7 @@
+"""
+Utility functions for general use
+"""
+
 import logging
 
 LOG_FORMAT = logging.Formatter(
@@ -6,6 +10,9 @@ LOG_FORMAT = logging.Formatter(
 )
 
 def get_logger(name, level=logging.INFO):
+  """
+  Return basic logger with console handler
+  """
   logging.basicConfig(level=level)
   logger = logging.getLogger(name)
   if logger.hasHandlers():
@@ -22,6 +29,10 @@ def get_logger(name, level=logging.INFO):
 log = get_logger("vardis")
 
 def to_optstring(options=dict()):
+  """
+  Convert dictionary of options into args string for
+  appending to cmds
+  """
   optstring = []
   for opt, val in options.items():
     if len(opt) > 1:

@@ -1,7 +1,21 @@
+"""
+Generate commands for samtools
+
+Functions can be run with different modes:
+- Input file only (in)
+- Output file only (out)
+- Both input & output file (inout)
+- STDIN and STDOUT only (pipe)
+"""
+
 import os.path as op
+
 from .utils import log, to_optstring
 
 def collate_sam(map_file, out_dir = None, out_flag = ".coll", tmp_dir = None, mode = "inout", options = dict()):
+  """
+  Format input as samtools collate cmd
+  """
   if out_dir == None:
     log.warning("No output directory specified.")
     out_dir = "."
@@ -39,6 +53,9 @@ def collate_sam(map_file, out_dir = None, out_flag = ".coll", tmp_dir = None, mo
   return (cmd, f_out)
 
 def fixmate_sam(map_file, out_dir = None, out_flag = ".fm", mode = "inout", options = dict()):
+  """
+  Format input as samtools fixmate cmd
+  """
   if out_dir == None:
     log.warning("No output directory specified.")
     out_dir = "."
@@ -77,6 +94,10 @@ def fixmate_sam(map_file, out_dir = None, out_flag = ".fm", mode = "inout", opti
   return (cmd, f_out)
 
 def sort_sam(map_file, out_dir = None, out_flag = ".sort", tmp_dir = None, sorting = "", mode = "inout", options = dict()):
+  """
+  Format input as samtools sort cmd
+  Specify sorting to override sort options from config
+  """
   if out_dir == None:
     log.warning("No output directory specified.")
     out_dir = "."
@@ -123,6 +144,9 @@ def sort_sam(map_file, out_dir = None, out_flag = ".sort", tmp_dir = None, sorti
   return (cmd, f_out)
 
 def markdup_sam(map_file, out_dir = None, out_flag = ".dedup", tmp_dir = None, mode = "inout", options = dict()):
+  """
+  Format input as samtools markdup cmd
+  """
   if out_dir == None:
     log.warning("No output directory specified.")
     out_dir = "."
@@ -164,6 +188,9 @@ def markdup_sam(map_file, out_dir = None, out_flag = ".dedup", tmp_dir = None, m
   return (cmd, f_out)
 
 def index_sam(ref, options=dict()):
+  """
+  Format input as samtools faidx cmd
+  """
   cmd = f"samtools faidx {ref.get_path()}"
   for opt in to_optstring(options):
     cmd += " " + opt

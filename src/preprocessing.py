@@ -2,11 +2,19 @@
 # Based on the script for parallel implementation of fastp
 # https://github.com/OpenGene/fastp/blob/cce79745e882a5794bae39a8b648b841a26d4529/parallel.py
 
+"""
+Generate commands for fastp preprocessing
+"""
+
 import os
 
 from .utils import log, to_optstring
 
 def prep_read(paired_coll, flag = "clean", out_dir=None, rep_dir=None, options=dict()):
+  """
+  Format input as fastp cmd
+  Specify flag to tag preprocessed reads
+  """
   if not os.path.isdir(out_dir):
     log.error("Specified output directory not found.")
     raise ValueError

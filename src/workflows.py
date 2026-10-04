@@ -1,12 +1,21 @@
+"""
+Implementations of wrapper scripts for
+batched or multistep procedures
+"""
+
 import os.path as op
-from .preprocessing import prep_read
-from .mapping import is_indexed, index_ref, map_read
+
 from .formats import SeqFile, get_paired_reads, filter_files, EXT_FA, EXT_SAM
+from .mapping import is_indexed, index_ref, map_read
+from .preprocessing import prep_read
 from .samfiles import collate_sam, fixmate_sam, markdup_sam, sort_sam, index_sam
 from .utils import log
 from .varcall import bcft_mpileup
 
 def batch_preprocess(in_dir, in_flags = ("_1", "_2"), out_flag = "clean", out_dir = None, rep_dir = None, options = dict()):
+  """
+  Format fastp commands for all paired reads in in_dir
+  """
   if not op.isdir(in_dir):
     log.error("Specified input directory not found.")
     raise ValueError
@@ -23,6 +32,9 @@ def batch_preprocess(in_dir, in_flags = ("_1", "_2"), out_flag = "clean", out_di
   return commands
 
 def batch_index(ref_dir, aligner = "bwa-mem2", options = dict()):
+  """
+  Format indexing commands for all sequences in ref_dir
+  """
   if not op.isdir(ref_dir):
     log.error("Specified reference directory not found.")
     raise ValueError
@@ -43,6 +55,10 @@ def batch_index(ref_dir, aligner = "bwa-mem2", options = dict()):
   return commands
 
 def batch_map(in_dir, ref_path, in_flags = ("_1", "_2"), prep_flag = ".clean", out_dir = None, aligner = "bwa-mem2", is_compress = False, options = dict()):
+  """
+  Format mapping commands for all paired reads in in_dir
+  using specified reference sequence
+  """
   if not op.isdir(in_dir):
     log.error("Specified input directory not found.")
     raise ValueError
@@ -63,6 +79,10 @@ def batch_map(in_dir, ref_path, in_flags = ("_1", "_2"), prep_flag = ".clean", o
   return commands
 
 def batch_dedup(in_dir, out_dir = None, tmp_dir = None, opt_set = dict()):
+  """
+  Format samtools pipeline for deduplication using
+  SAM files in in_dir
+  """
   if not op.isdir(in_dir):
     log.error("Specified input directory not found.")
     raise ValueError
@@ -121,6 +141,9 @@ def batch_dedup(in_dir, out_dir = None, tmp_dir = None, opt_set = dict()):
   return commands
 
 def batch_genotype(in_dir, ref_path, in_flag = ".dedup", out_dir = None, options = dict()):
+  """
+  Format mpileup commands for SAM files in in_dir
+  """
   if not op.isdir(in_dir):
     log.error("Specified input directory not found.")
     raise ValueError

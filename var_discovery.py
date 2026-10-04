@@ -1,5 +1,10 @@
 #!/usr/bin/env python
 
+"""
+Workflow for handling paired reads from
+preprocessing to calculation of genotype likelihoods
+"""
+
 import copy
 from datetime import timedelta
 import logging
@@ -15,6 +20,9 @@ from src.workflows import batch_preprocess, batch_index, batch_map, batch_dedup,
 LOG_DIR = "./logs/"
 
 def setup_logging(log_config, is_quiet):
+  """
+  Modify basic logger based on config
+  """
   if not os.path.isdir(LOG_DIR):
     os.mkdir(LOG_DIR)
 
@@ -36,6 +44,9 @@ def setup_logging(log_config, is_quiet):
     logging.disable()
 
 def check_dirs(dir_list):
+  """
+  Add missing directories to config
+  """
   if "in_dir" not in dir_list:
     log.warning("No input directory specified in config.")
     dir_list["in_dir"] = "."

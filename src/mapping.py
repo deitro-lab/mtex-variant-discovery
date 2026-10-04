@@ -1,7 +1,16 @@
+"""
+Generate commands for aligner (bwa-mem2, minibwa)
+"""
+
 import os.path as op
+
 from .utils import log, to_optstring
 
 def is_indexed(path, aligner):
+  """
+  Check if file is already indexed based on
+  expected index files.
+  """
   if aligner == "bwa-mem2":
     idxext = (".0123", ".amb", ".ann", ".bwt.2bit.64", ".pac")
   elif aligner == "minibwa":
@@ -16,6 +25,9 @@ def is_indexed(path, aligner):
   return True
 
 def index_ref(ref, aligner = "bwa-mem2", options=dict()):
+  """
+  Format input as bwa-mem2 index or minibwa index cmd
+  """
   if ref.format != "fa":
     log.error("Invalid file type detected.")
     raise ValueError
@@ -32,6 +44,9 @@ def index_ref(ref, aligner = "bwa-mem2", options=dict()):
   return cmd
 
 def map_read(paired_coll, ref, out_dir = None, aligner = "bwa-mem2", is_compress = False, options = dict()):
+  """
+  Format input as bwa-mem2 mem or minibwa map cmd
+  """
   if out_dir == None:
     log.warning("No output directory specified.")
     out_dir = "."

@@ -1,7 +1,15 @@
+"""
+Generate commands for bcftools
+"""
+
 import os.path as op
+
 from .utils import log, to_optstring
 
 def bcft_mpileup(map_file, ref, out_dir = None, options = dict()):
+  """
+  Format input as bcftools mpileup cmd
+  """
   vcext = {"b": ".bcf", "u": ".bcf", "z": ".vcf", "v": ".vcf"}
 
   if out_dir == None:

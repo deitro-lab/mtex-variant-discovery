@@ -1,12 +1,20 @@
+"""
+Config parsers and project setup
+"""
+
 import argparse
 import os
 import tomllib
+
 from .utils import log
 
 TOOL_NAME = "Mtex Variant Discovery"
 VERSION = "1.0"
 
 def parse_options():
+  """
+  Return args specified for main script
+  """
   parser = argparse.ArgumentParser(
     prog=TOOL_NAME,
     usage=f"python var_discovery.py [-h] [-c CONFIG] [options...]",
@@ -36,6 +44,9 @@ def parse_options():
   return args
 
 def parse_config(config_path, defaults = None):
+  """
+  Return parsed TOML config file
+  """
   log.debug("Loading config file at '%s'", config_path)
   if os.path.exists(config_path):
     with open(config_path, "rb") as cf:
@@ -56,6 +67,9 @@ def parse_config(config_path, defaults = None):
   return config
 
 def init_project(folders):
+  """
+  Create non-existing dirs in project directory
+  """
   for folder in folders:
     if not os.path.isdir(folder):
       os.makedirs(folder)
