@@ -177,7 +177,7 @@ def markdup_sam(map_file, out_dir = None, out_flag = ".dedup", tmp_dir = None, m
     if "O" in options.keys():
       f_out += "." + options["O"].lower()
     elif "output-fmt" in options.keys():
-      f_out = "." + options["output-fmt"].lower()
+      f_out += "." + options["output-fmt"].lower()
     else:
       if "u" in options.keys():
         f_out += ".sam"
