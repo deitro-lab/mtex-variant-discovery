@@ -33,30 +33,3 @@ for ex in ${ext[@]}; do
     fi
   done
 done
-
-echo "==========================================="
-echo "Minimize headers for LTR analysis"
-echo "==========================================="
-nd=$refs
-for fn in $nd/*.norm.fa; do
-  bname=$(basename $fn .norm.fa)
-
-  # Extract original headers
-  echo "Extracting original headers from $fn..."
-  echo "primary" > $nd/$bname.primary.head
-  awk '/^>/ { print }' $fn >> $nd/$bname.primary.head
-
-  # Normalize headers
-  echo "Normalizing headers for $fn..."
-  awk 'BEGIN { c = 0 } { if ($0 ~ /^>/) { printf "%.4s%0.6i\n", $1, c; c += 1 } else { print } }' $fn > $fn
-
-  # Extract normalized headers
-  echo "Extracting normalized headers from $fn..."
-  echo "norm" > $nd/$bname.norm.head
-  awk '/^>/ { print }' $fn >> $nd/$bname.norm.head
-
-  # Generate header index and perform cleanup
-  echo "Generating header index for $fn..."
-  paste $nd/$bname.norm.head $nd/$bname.primary.head > $nd/$bname.head.tsv
-  rm $nd/$bname.norm.head $nd/$bname.primary.head
-done
