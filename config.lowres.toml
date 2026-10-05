@@ -1,4 +1,4 @@
-workers = 2
+workers = 1
 
 [directories]
 # Relative paths will be resolved based on project directory
@@ -27,7 +27,7 @@ main_ref = 'ref_genome.norm.fa'
 # options.<tool> - follows syntax of options specified by
   # the tool; set flags to true
 [options.fastp]
-thread = 8
+thread = 4
 trim_poly_g = true
 detect_adapter_for_pe = true
 dont_eval_duplication = true
@@ -36,38 +36,38 @@ length_limit = 160
 qualified_quality_phred = 20
 
 [options.bwamem2_mem]
-t = 11
+t = 1
 
 [options.minibwa_map]
-t = 11
+t = 1
 
 [options.sam_collate]
-threads = 8
+threads = 0
 output-fmt = 'SAM'
 u = true
 
 [options.sam_fixmate]
-threads = 5
+threads = 0
 output-fmt = 'SAM'
 m = true
 
 [options.sam_sort]
-threads = 5
+threads = 0
 m = '29491M'
 output-fmt = 'SAM'
 u = true
 
 [options.sam_markdup]
-threads = 5
+threads = 0
 output-fmt = 'BAM'
 r = true
 s = true
 
 [options.sam_faidx]
-threads = 2
+threads = 0
 
 [options.bcftools_mpileup]
-threads = 11
+threads = 0
 d = 8000
 ambig-reads = 'drop'
 annotate = 'AD,DP,SP,SCR'

@@ -52,7 +52,7 @@ conda create --file environment.yml
 ```
 3. Set new environment as the active virtual env
 ```shell
-conda activate <ENV_NAME>
+conda activate vardis
 ```
 
 # Usage
@@ -91,6 +91,29 @@ python var_discovery.py [-h] [-c CONFIG] [options...]
 -h, --help            show this help message and exit
 ```
 
+# Configuration
+Most of the settings for the script and the tools it uses have to be set in the `config.toml` file. Alternative config files can be provided via `-c FILE` option (must be TOML format). 
+
+> 💡 For systems with limited memory/CPU, use the `config.lowres.toml` to limit or disable multithreading for most tools.
+
+| Key     | Value  | Description                                  |
+| ------- | ------ | -------------------------------------------- |
+| in_dir  | `path` | Directory containing raw PE reads            |
+| out_dir | `path` | Directory for file outputs                   |
+| ref_dir | `path` | Directory for reference genome assemblies    |
+| tmp_dir | `path` | Directory for temporary files                |
+| rep_dir | `path` | Directory for reports, metrics, and stats    |
+| workers | `int`  | Max subprocesses available for parallel jobs |
+| main_ref | `str`  | File name of reference sequence |
+
+Refer to the corresponding tool documentation for configuring `options.<tool_name>`:
+- [fastp](https://github.com/OpenGene/fastp)
+- [bwa](http://bio-bwa.sourceforge.net/bwa.shtml)
+- [samtools](https://www.htslib.org/doc/samtools.html)
+- [bcftools](https://samtools.github.io/bcftools/bcftools.html)
+
+> ⚠️ Use the exact separators (e.g. `-` or `_`) for the option names based on the original tool documentation.
+
 ## SLURM
 The program can be used in a SLURM environment with an accompanying script (`setup_run.py`) for automatically adjusting the config based on the run parameters.
 
@@ -123,27 +146,6 @@ set -euo pipefail
 python setup_run.py
 python var_discovery.py
 ```
-
-# Configuration
-Most of the settings for the script and the tools it uses have to be set in the `config.toml` file. Alternative config files can be provided via `-c FILE` option (must be TOML format). 
-
-| Key     | Value  | Description                                  |
-| ------- | ------ | -------------------------------------------- |
-| in_dir  | `path` | Directory containing raw PE reads            |
-| out_dir | `path` | Directory for file outputs                   |
-| ref_dir | `path` | Directory for reference genome assemblies    |
-| tmp_dir | `path` | Directory for temporary files                |
-| rep_dir | `path` | Directory for reports, metrics, and stats    |
-| workers | `int`  | Max subprocesses available for parallel jobs |
-| main_ref | `str`  | File name of reference sequence |
-
-Refer to the corresponding tool documentation for configuring `options.<tool_name>`:
-- [fastp](https://github.com/OpenGene/fastp)
-- [bwa](http://bio-bwa.sourceforge.net/bwa.shtml)
-- [samtools](https://www.htslib.org/doc/samtools.html)
-- [bcftools](https://samtools.github.io/bcftools/bcftools.html)
-
-> ⚠️ Use the exact separators (e.g. `-` or `_`) for the option names based on the original tool documentation.
 
 # Citations
 - Chen, S. (2025). fastp 1.0: An ultra-fast all-round tool for FASTQ data quality control and preprocessing. *iMeta, 4*(5), e70078. https://doi.org/10.1002/imt2.70078
