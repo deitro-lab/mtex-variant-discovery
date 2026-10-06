@@ -1,10 +1,31 @@
 #!/usr/bin/env python
 
+import argparse
 import math
 import os
 from tomlkit.toml_file import TOMLFile
 
 from src.formats import filter_files
+from src.utils import log
+
+def parse_options():
+  parser = argparse.ArgumentParser(
+    prog="setup_run",
+    usage=f"python setup_run.py [-r PATH]",
+    description="A script for batched processing of short-read FASTQ data from preprocessing to variant calling"
+  )
+  parser.add_argument("-r", "--root", default=".", help="Path to root folder")
+
+  try:
+    args = parser.parse_args()
+  except argparse.ArgumentError as err:
+    log.error("Unable to parse provided args: %s", err.message)
+    return err
+  except Exception as err:
+    log.error("An unexpected error occurred: %s", err)
+    return err
+
+  return args
 
 def get_mem(cpus=1, mem_per_cpu=4096):
   buffer = 0.8
@@ -13,6 +34,10 @@ def get_mem(cpus=1, mem_per_cpu=4096):
   return f"{mem}M"
 
 def main():
+  # Load options
+  setup_opts = parse_options()
+  log.info("Loaded '%s' as root directory", setup_opts.root)
+
   # Load job config
   job = {
     "ntasks": int(os.environ.get("SLURM_NTASKS", 1)),
@@ -26,7 +51,7 @@ def main():
   job["cpt_mid"] = max(math.floor(job["cpt_max"] * 0.5), 2)
   job["cpt_himid"] = max(math.floor(job["cpt_max"] * 0.75), 4)
 
-  print("#======JOB PARAMS======#")
+  print("\n#======JOB PARAMS======#")
   for k, v in job.items():
     print(f"{k}: {v}")
   print("#======================#\n")
@@ -38,9 +63,9 @@ def main():
       cfile = TOMLFile(f)
       config = cfile.read()
     except Exception as err:
-      print(f"An unexpected error occurred: {err}")
+      log.error("An unexpected error occurred: %s", err)
 
-    print("Config file loaded.")
+    log.info("Config file loaded.")
 
     # Set no. of workers available to
     # process files in parallel
@@ -67,8 +92,19 @@ def main():
     config["options"]["sam_faidx"]["threads"] = job["cpt_lowmid"]-1
     config["options"]["bcftools_mpileup"]["threads"] = job["cpt_max"]-1
 
+    # Set directories
+    def_dir = {
+      "in_dir": "reads",
+      "out_dir": "output",
+      "ref_dir": "refs",
+      "tmp_dir": "tmp",
+      "rep_dir": "output/reports"
+    }
+    for dir, dpath in def_dir.items():
+      config["directories"][dir] = os.path.join(setup_opts.root, dpath)
+
     cfile.write(config)
-    print(f"Config at '{f}' updated.")
+    log.info("Config at '%s' updated.", f)
 
 if __name__ == "__main__":
   main()
