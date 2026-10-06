@@ -9,7 +9,7 @@ LOG_FORMAT = logging.Formatter(
   datefmt="%Y-%m-%d %H:%M:%S"
 )
 
-def get_logger(name, level=logging.INFO):
+def get_logger(name, level=logging.DEBUG):
   """
   Return basic logger with console handler
   """
@@ -20,7 +20,7 @@ def get_logger(name, level=logging.INFO):
   logger.propagate = False
 
   handler = logging.StreamHandler()
-  handler.setLevel(level)
+  handler.setLevel(logging.INFO)
   handler.setFormatter(LOG_FORMAT)
   logger.addHandler(handler)
 
